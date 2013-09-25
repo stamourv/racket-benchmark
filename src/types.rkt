@@ -16,8 +16,11 @@
  ;; time of a single trial
  (struct-out benchmark-trial-time)
  ;; time of multiple trials
- (struct-out benchmark-trial-times)
+ (struct-out benchmark-trial-stats)
  (struct-out measured-value)
+ ;; result
+ (struct-out benchmark-result)
+ mk-benchmark-result
  )
 
 ;; define data representation
@@ -26,46 +29,57 @@
 (define nothing (nothing-s))
 
 (struct benchmark-one
-  (name            ;; string?
-   thunk           ;; procedure?
+  (thunk           ;; procedure?
    opts            ;; benchmark-opts?
    )
   #:transparent
   )
 
-(define (mk-benchmark-one name thunk [opts nothing])
-  (benchmark-one name thunk opts))
+(define (mk-benchmark-one name thunk [opts (mk-benchmark-opts)])
+  (benchmark-one thunk (struct-copy benchmark-opts opts [name name])))
 
 (struct benchmark-group
-  (name            ;; string?
-   benchmarks      ;; list? of benchmark-one?
+  (benchmarks      ;; list? of benchmark-one?
    opts            ;; benchmark-opts?
    )
   #:transparent
   )
 
-(define (mk-benchmark-group name benchmarks [opts nothing])
-  (benchmark-group name benchmarks opts))
+(define (mk-benchmark-group name benchmarks [opts (mk-benchmark-opts)])
+  (benchmark-group benchmarks (struct-copy benchmark-opts opts [name name])))
 
 (struct benchmark-opts
-  (gc-between-each ;; boolean?
+  (name            ;; string?
+   gc-between-each ;; boolean?
    num-trials      ;; exact-integer?
    itrs-per-trial  ;; exact-integer?
    discard-first   ;; boolean?
    time-external   ;; boolean?
    )
-  #:transparent
+  #:prefab
   )
 
 (define (mk-benchmark-opts
+         #:name [name ""]
          #:gc-between [gc-between nothing]
          #:num-trials [num-trials nothing]
          #:itrs-per-trial [itrs-per-trial nothing]
          #:discard-first [discard-first nothing]
          #:time-external [time-external nothing])
-  (benchmark-opts gc-between num-trials itrs-per-trial discard-first time-external))
+  (benchmark-opts name gc-between num-trials itrs-per-trial
+                  discard-first time-external))
 
-(define default-opts (benchmark-opts #t 50 1000 #t #t))
+(define default-opts (benchmark-opts "" #t 50 1000 #t #t))
+
+(struct benchmark-result
+  (opts            ;; benchmark-opts?
+   trial-stats     ;; benchmark-trial-stats?
+   )
+  #:prefab
+  )
+
+(define (mk-benchmark-result opts trial-stats)
+  (benchmark-result opts trial-stats))
 
 ;; raw time of a single trial
 (struct benchmark-trial-time
@@ -73,16 +87,16 @@
    real            ;; exact-integer?
    gc              ;; exact-integer?
    )
-  #:transparent
+  #:prefab
   )
 
 ;; trial times
-(struct benchmark-trial-times
-  (cpu            ;; measured-value?
+(struct benchmark-trial-stats
+  (cpu             ;; measured-value?
    real            ;; measured-value?
    gc              ;; measured-value?
    )
-  #:transparent
+  #:prefab
   )
 
 (struct measured-value
@@ -92,5 +106,5 @@
    ;; conf-ub             ;; flonum?
    ;; conf-level          ;; flonum?
    )
-  #:transparent
+  #:prefab
   )

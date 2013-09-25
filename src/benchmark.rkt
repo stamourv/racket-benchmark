@@ -10,6 +10,8 @@
  run-benchmarks
  time-one
  (struct-out benchmark-trial-time)
+ record-results
+ get-past-results
  )
 
 ;; for internal timing
@@ -22,34 +24,36 @@
 (define (append-opts o1 o2)
   (define (filter-nothing lst)
     (filter (lambda (x) (not (nothing-s? x))) lst))
+  (define (relname a b)
+    (if (equal? "" a) b (string-append a "/" b)))
+  (define (name-val o)
+    (if (or (nothing-s? o) (nothing-s? (benchmark-opts-name o)))
+        ""
+        (benchmark-opts-name o)))
   (define (opt-val fn)
     (let ([filtered-opts (filter-nothing (map fn (filter-nothing (list o1 o2))))])
       (if (null? filtered-opts)
           nothing
           (car filtered-opts))))
-  (let ([gc (opt-val benchmark-opts-gc-between-each)]
+  (let ([name (relname (name-val o2) (name-val o1))]
+        [gc (opt-val benchmark-opts-gc-between-each)]
         [trials (opt-val benchmark-opts-num-trials)]
         [itrs (opt-val benchmark-opts-itrs-per-trial)]
         [discard (opt-val benchmark-opts-discard-first)]
         [time-external (opt-val benchmark-opts-time-external)])
-    (benchmark-opts gc trials itrs discard time-external)))
+    (benchmark-opts name gc trials itrs discard time-external)))
 
 (define (append-default-opts o) (append-opts o default-opts))
 
-;; string? string? -> string?
-(define (relname a b)
-  (if (equal? "" a) b (string-append a "/" b)))
-
-;; (benchmark-one? or benchmark-group?) -> void
+;; (benchmark-one? or benchmark-group?) -> list? (benchmark-result?)
 (define (run-benchmarks benchmarks [benchmark-opts nothing])
-  (define (run-benchmarks-aux bs name opts)
+  (define (run-benchmarks-aux bs opts)
     ;; run a benchmark (benchmark-one? or benchmark-group?)
     ;; from benchmark-group? bs, remembering the name and
     ;; benchmark-options? of the bs
     (define (run-group-elem e)
       (run-benchmarks-aux
        e
-       (relname name (benchmark-group-name bs))
        (append-opts (benchmark-group-opts bs) opts)))
     ;; run a benchmark-one?
     (define (run-one b)
@@ -57,49 +61,73 @@
              (append-default-opts (append-opts (benchmark-one-opts b) opts))])
         (displayln
          (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
-                 (relname name (benchmark-one-name b))
+                 (benchmark-opts-name final-opts)
                  (benchmark-opts-num-trials final-opts)
                  (benchmark-opts-itrs-per-trial final-opts)))
-        (let ([times
-               ;; for each trial
-               (for/list ([i (benchmark-opts-num-trials final-opts)])
-                 (begin
-                   (when (benchmark-opts-gc-between-each final-opts)
-                     (collect-garbage)
-                     (collect-garbage)
-                     (collect-garbage))
-                   (if (benchmark-opts-time-external final-opts)
-                       (let-values
-                           ([(_ cpu real gc)
-                             (time-apply
-                              (lambda ()
-                                (for ([j (benchmark-opts-itrs-per-trial final-opts)])
-                                  ((benchmark-one-thunk b))))
-                              '())])
-                         (benchmark-trial-time cpu real gc))
-                       (begin
-                         ((benchmark-one-thunk b))
-                         (vector-ref (sync timing-logger-receiver) 2)
-                         ))))])
-          (print-times
-           (raw-to-stats
-            (if (benchmark-opts-discard-first final-opts)
-                (cdr times)
-                times))))))
+        (let* ([times
+                ;; for each trial
+                (for/list ([i (benchmark-opts-num-trials final-opts)])
+                  (begin
+                    (when (benchmark-opts-gc-between-each final-opts)
+                      (collect-garbage)
+                      (collect-garbage)
+                      (collect-garbage))
+                    (if (benchmark-opts-time-external final-opts)
+                        (let-values
+                            ([(_ cpu real gc)
+                              (time-apply
+                               (lambda ()
+                                 (for ([j (benchmark-opts-itrs-per-trial final-opts)])
+                                   ((benchmark-one-thunk b))))
+                               '())])
+                          (benchmark-trial-time cpu real gc))
+                        (begin
+                          ((benchmark-one-thunk b))
+                          (vector-ref (sync timing-logger-receiver) 2)
+                          ))))]
+               [trimmed-times
+                (if (benchmark-opts-discard-first final-opts)
+                    (cdr times)
+                    times)]
+               [stats (raw-to-stats trimmed-times)])
+          (print-times (raw-to-stats trimmed-times))
+          (mk-benchmark-result final-opts stats))))
     (cond
      [(benchmark-group? bs)
-      (map run-group-elem (benchmark-group-benchmarks bs))]
-     [(benchmark-one? bs) (run-one bs)]
+      (apply append (map run-group-elem (benchmark-group-benchmarks bs)))]
+     [(benchmark-one? bs) (list (run-one bs))]
      [else
       (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
-  (run-benchmarks-aux benchmarks "" benchmark-opts))
+  (let*
+      ([mk-result-table
+        (lambda (res)
+          (make-hash
+           (map (lambda (x)
+                  (cons (benchmark-opts-name (benchmark-result-opts x)) x))
+                res)))]
+       [results (run-benchmarks-aux benchmarks benchmark-opts)]
+       [results-table (mk-result-table results)]
+       [past-results-table (mk-result-table (get-past-results))]
+       [shared-keys (set-intersect
+                     (apply set (hash-keys results-table))
+                     (apply set (hash-keys past-results-table)))]
+       [regressions
+        (filter
+         (lambda (x) (car x))
+         (map (lambda (x) (list (regression? (cadr x) (caddr x)) (car x)))
+              (set-map shared-keys
+                       (lambda (y) (list y
+                                         (hash-ref past-results-table y)
+                                         (hash-ref results-table y))))))])
+       (displayln regressions)
+       (record-results results)))
 
-;; list? (benchmark-trial-time?) -> benchmark-trial-times?
+;; list? (benchmark-trial-time?) -> benchmark-trial-stats?
 (define (raw-to-stats times)
   (let ([cpu (map benchmark-trial-time-cpu times)]
         [real (map benchmark-trial-time-real times)]
         [gc (map benchmark-trial-time-gc times)])
-    (benchmark-trial-times (calculate-stats cpu)
+    (benchmark-trial-stats (calculate-stats cpu)
                            (calculate-stats real)
                            (calculate-stats gc))))
 
@@ -116,13 +144,13 @@
 (define (coeff-of-variation vals)
   (/ (stddev vals) (mean vals)))
 
-;; list? (benchmark-trial-times?) -> void
+;; list? (benchmark-trial-stats?) -> void
 (define (print-times trial-times)
   (printf
    "cpu: ~a\nreal: ~a\ngc: ~a\n"
-   (show-measured-value (benchmark-trial-times-cpu trial-times))
-   (show-measured-value (benchmark-trial-times-real trial-times))
-   (show-measured-value (benchmark-trial-times-gc trial-times))))
+   (show-measured-value (benchmark-trial-stats-cpu trial-times))
+   (show-measured-value (benchmark-trial-stats-real trial-times))
+   (show-measured-value (benchmark-trial-stats-gc trial-times))))
 
 ;; measured-value? -> string?
 (define (show-measured-value mv)
@@ -134,3 +162,22 @@
 (define (time-one thunk)
   (let-values ([(_ cpu real gc) (time-apply thunk '())])
     (report-time (benchmark-trial-time cpu real gc))))
+
+(define (get-past-results)
+  (if (file-exists? ".benchmarks")
+      (file->value ".benchmarks" #:mode 'text)
+      (list)))
+
+(define (record-results results)
+  (write-to-file results ".benchmarks" #:mode 'text #:exists 'truncate))
+
+;; benchmark-result? benchmark-result? -> bool
+;; TODO: this is wrong, fix it using confidence intervals
+(define (regression? br1 br2)
+  (< (measured-value-mean
+      (benchmark-trial-stats-real
+       (benchmark-result-trial-stats br1)))
+     (measured-value-mean
+      (benchmark-trial-stats-real
+       (benchmark-result-trial-stats br2)))))
+

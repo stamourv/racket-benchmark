@@ -2,6 +2,7 @@
 
 (require rackunit)
 (require "../src/benchmark.rkt")
+(require "../src/types.rkt")
 
 ;; benchmark tests
 (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
@@ -31,8 +32,6 @@
 (run-benchmarks
  (mk-benchmark-group
   ""
-  (list
-   fib-internal-group
-   fib-external-group
-   )
-  (mk-benchmark-opts #:gc-between #f)))
+  (list fib-internal-group fib-external-group)
+  (mk-benchmark-opts #:gc-between #f #:itrs-per-trial 100)))
+
