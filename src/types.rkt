@@ -14,7 +14,7 @@
  mk-benchmark-opts
  default-opts
  ;; time of a single trial
- (struct-out benchmark-time)
+ (struct-out benchmark-trial-time)
  ;; time of multiple trials
  (struct-out benchmark-trial-times)
  (struct-out measured-value)
@@ -35,8 +35,6 @@
 
 (define (mk-benchmark-one name thunk [opts nothing])
   (benchmark-one name thunk opts))
-
-;; (define-syntax-rule (mk-benchmark name expr ))
 
 (struct benchmark-group
   (name            ;; string?
@@ -60,17 +58,17 @@
   )
 
 (define (mk-benchmark-opts
-         #:gc-between [gc-between #t]
-         #:num-trials [num-trials 50]
-         #:itrs-per-trial [itrs-per-trial 1000]
-         #:discard-first [discard-first #t]
-         #:time-external [time-external #t])
+         #:gc-between [gc-between nothing]
+         #:num-trials [num-trials nothing]
+         #:itrs-per-trial [itrs-per-trial nothing]
+         #:discard-first [discard-first nothing]
+         #:time-external [time-external nothing])
   (benchmark-opts gc-between num-trials itrs-per-trial discard-first time-external))
 
-(define default-opts (mk-benchmark-opts))
+(define default-opts (benchmark-opts #t 50 1000 #t #t))
 
 ;; raw time of a single trial
-(struct benchmark-time
+(struct benchmark-trial-time
   (cpu             ;; exact-integer?
    real            ;; exact-integer?
    gc              ;; exact-integer?

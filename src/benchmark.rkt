@@ -7,16 +7,25 @@
  mk-benchmark-one
  mk-benchmark-group
  mk-benchmark-opts
- run-benchmarks)
+ run-benchmarks
+ time-one
+ (struct-out benchmark-trial-time)
+ )
+
+;; for internal timing
+(define timing-logger (make-logger 'timing-logger))
+(define timing-logger-receiver (make-log-receiver timing-logger 'info))
+(define (report-time time)
+  (log-message timing-logger 'info "" time))
 
 ;; this module implements a simple benchmarking library
-(define (append-opts opts)
+(define (append-opts o1 o2)
   (define (filter-nothing lst)
     (filter (lambda (x) (not (nothing-s? x))) lst))
   (define (opt-val fn)
-    (let ([filtered-opts (filter-nothing (map fn (filter-nothing opts)))])
+    (let ([filtered-opts (filter-nothing (map fn (filter-nothing (list o1 o2))))])
       (if (null? filtered-opts)
-          (fn default-opts)
+          nothing
           (car filtered-opts))))
   (let ([gc (opt-val benchmark-opts-gc-between-each)]
         [trials (opt-val benchmark-opts-num-trials)]
@@ -25,22 +34,32 @@
         [time-external (opt-val benchmark-opts-time-external)])
     (benchmark-opts gc trials itrs discard time-external)))
 
-;; running benchmarks
+(define (append-default-opts o) (append-opts o default-opts))
+
+;; string? string? -> string?
+(define (relname a b)
+  (if (equal? "" a) b (string-append a "/" b)))
+
+;; (benchmark-one? or benchmark-group?) -> void
 (define (run-benchmarks benchmarks [benchmark-opts nothing])
-  (define (relname a b)
-    (if (equal? "" a) b (string-append a "/" b)))
-  (define (run-benchmark bs name opts)
-    (define (run-group-elem b)
-      (run-benchmark
-       b
+  (define (run-benchmarks-aux bs name opts)
+    ;; run a benchmark (benchmark-one? or benchmark-group?)
+    ;; from benchmark-group? bs, remembering the name and
+    ;; benchmark-options? of the bs
+    (define (run-group-elem e)
+      (run-benchmarks-aux
+       e
        (relname name (benchmark-group-name bs))
-       (append-opts (list (benchmark-group-opts bs) opts))))
+       (append-opts (benchmark-group-opts bs) opts)))
+    ;; run a benchmark-one?
     (define (run-one b)
-      (let ([final-opts (append-opts (list (benchmark-one-opts b) opts))])
-        (displayln (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
-                           (relname name (benchmark-one-name b))
-                           (benchmark-opts-num-trials final-opts)
-                           (benchmark-opts-itrs-per-trial final-opts)))
+      (let ([final-opts
+             (append-default-opts (append-opts (benchmark-one-opts b) opts))])
+        (displayln
+         (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
+                 (relname name (benchmark-one-name b))
+                 (benchmark-opts-num-trials final-opts)
+                 (benchmark-opts-itrs-per-trial final-opts)))
         (let ([times
                ;; for each trial
                (for/list ([i (benchmark-opts-num-trials final-opts)])
@@ -49,14 +68,19 @@
                      (collect-garbage)
                      (collect-garbage)
                      (collect-garbage))
-                   (let-values
-                       ([(_ cpu real gc)
-                         (time-apply
-                          (lambda ()
-                            (for ([j (benchmark-opts-itrs-per-trial final-opts)])
-                              (apply (benchmark-one-thunk bs) '())))
-                          '())])
-                   (benchmark-time cpu real gc))))])
+                   (if (benchmark-opts-time-external final-opts)
+                       (let-values
+                           ([(_ cpu real gc)
+                             (time-apply
+                              (lambda ()
+                                (for ([j (benchmark-opts-itrs-per-trial final-opts)])
+                                  ((benchmark-one-thunk b))))
+                              '())])
+                         (benchmark-trial-time cpu real gc))
+                       (begin
+                         ((benchmark-one-thunk b))
+                         (vector-ref (sync timing-logger-receiver) 2)
+                         ))))])
           (print-times
            (raw-to-stats
             (if (benchmark-opts-discard-first final-opts)
@@ -68,12 +92,13 @@
      [(benchmark-one? bs) (run-one bs)]
      [else
       (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
-  (run-benchmark benchmarks "" benchmark-opts))
+  (run-benchmarks-aux benchmarks "" benchmark-opts))
 
+;; list? (benchmark-trial-time?) -> benchmark-trial-times?
 (define (raw-to-stats times)
-  (let ([cpu (map benchmark-time-cpu times)]
-        [real (map benchmark-time-real times)]
-        [gc (map benchmark-time-gc times)])
+  (let ([cpu (map benchmark-trial-time-cpu times)]
+        [real (map benchmark-trial-time-real times)]
+        [gc (map benchmark-trial-time-gc times)])
     (benchmark-trial-times (calculate-stats cpu)
                            (calculate-stats real)
                            (calculate-stats gc))))
@@ -105,21 +130,7 @@
           (exact->inexact (measured-value-mean mv))
           (exact->inexact (measured-value-coeff-of-var mv))))
 
-;; tests
-
-;; append opts tests
-;; (define t1 (benchmark-opts #t 1))
-;; (define f2 (benchmark-opts #f 2))
-;; (define n2 (benchmark-opts nothing 2))
-;; (define fn (benchmark-opts #f nothing))
-;; (define nn (benchmark-opts nothing nothing))
-
-;; (check-equal? (append-opts (list t1 f2)) t1 "'(t1 f2) -> t1")
-;; (check-equal? (append-opts (list f2 t1)) f2 "'(f2 t1) -> f2")
-;; (check-equal? (append-opts (list fn f2)) f2 "'(fn f2) -> f2")
-;; (check-equal? (append-opts (list fn n2)) f2 "'(fn n2) -> f2")
-;; (check-equal? (append-opts (list nn f2)) f2 "'(nn f2) -> f2")
-;; (check-equal? (append-opts (list nn)) default-opts "'(nn) --> default")
-;; (check-equal? (append-opts '()) default-opts "'() -> default")
-;; (check-equal? (append-opts (list nn nn)) default-opts "'(nn nn) -> default")
-
+;; procedure? -> void
+(define (time-one thunk)
+  (let-values ([(_ cpu real gc) (time-apply thunk '())])
+    (report-time (benchmark-trial-time cpu real gc))))
