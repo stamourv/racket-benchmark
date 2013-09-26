@@ -2,6 +2,7 @@
 
 (require math/statistics)
 (require "types.rkt")
+(require "stats.rkt")
 
 (provide
  mk-benchmark-one
@@ -46,7 +47,9 @@
 (define (append-default-opts o) (append-opts o default-opts))
 
 ;; (benchmark-one? or benchmark-group?) -> list? (benchmark-result?)
-(define (run-benchmarks benchmarks [benchmark-opts nothing])
+(define (run-benchmarks benchmarks
+                        #:benchmark-opts [benchmark-opts nothing]
+                        #:results-file-prefix [results-file-prefix "default"])
   (define (run-benchmarks-aux bs opts)
     ;; run a benchmark (benchmark-one? or benchmark-group?)
     ;; from benchmark-group? bs, remembering the name and
@@ -98,51 +101,58 @@
      [(benchmark-one? bs) (list (run-one bs))]
      [else
       (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
-  (let*
-      ([mk-result-table
-        (lambda (res)
-          (make-hash
-           (map (lambda (x)
-                  (cons (benchmark-opts-name (benchmark-result-opts x)) x))
-                res)))]
-       [results (run-benchmarks-aux benchmarks benchmark-opts)]
-       [results-table (mk-result-table results)]
-       [past-results-table (mk-result-table (get-past-results))]
-       [shared-keys (set-intersect
-                     (apply set (hash-keys results-table))
-                     (apply set (hash-keys past-results-table)))]
-       [regressions
-        (filter
-         (lambda (x) (car x))
-         (map (lambda (x) (list (regression? (cadr x) (caddr x)) (car x)))
-              (set-map shared-keys
-                       (lambda (y) (list y
-                                         (hash-ref past-results-table y)
-                                         (hash-ref results-table y))))))])
-       (displayln regressions)
-       (record-results results)))
+  (check-results (run-benchmarks-aux benchmarks benchmark-opts)
+                 results-file-prefix))
 
-;; list? (benchmark-trial-time?) -> benchmark-trial-stats?
-(define (raw-to-stats times)
-  (let ([cpu (map benchmark-trial-time-cpu times)]
-        [real (map benchmark-trial-time-real times)]
-        [gc (map benchmark-trial-time-gc times)])
-    (benchmark-trial-stats (calculate-stats cpu)
-                           (calculate-stats real)
-                           (calculate-stats gc))))
+;; list? (benchmark-result?) string? -> void
+(define (check-results new-results file-prefix)
+  ;; make a hash table: options -> results
+  (define (mk-result-table res)
+    (make-hash
+     (map
+      ;; alist of the form (options . results)
+      (lambda (x) (cons (benchmark-result-opts x) x))
+      res)))
+  (let* ([new-results-table (mk-result-table new-results)]
+         [past-results-table
+          (mk-result-table (get-past-results file-prefix))]
+         ;; comparable benchmarks are those with the same benchmark-opts?
+         [comparable-benchmarks
+          (set->list
+           (set-intersect
+            (apply set (hash-keys new-results-table))
+            (apply set (hash-keys past-results-table))))]
+         ;; (old-result . new-result) ... such that
+         ;; (equal? (benchmark-result-opts old-result)
+         ;;         (benchmark-result-opts new-result))
+         [comparable-results
+          (map (lambda (k)
+                 (cons (hash-ref past-results-table k)
+                       (hash-ref new-results-table k)))
+               comparable-benchmarks)]
+         [comparisons
+          (map (lambda (x) (compare-benchmarks (car x) (cdr x)))
+               comparable-results)]
+         [filter-by-result
+          (lambda (res)
+            (filter (lambda (bc)
+                      (equal?
+                       res
+                       (benchmark-comparison-result bc)))
+                    comparisons))]
+         [print-results
+          (lambda (symb msg)
+            (let ([res (filter-by-result symb)])
+              (when (not (null? res))
+                (displayln "")
+                (displayln msg)
+                (for ([i res]) 
+                  (displayln (benchmark-comparison-opts i))))))])
 
-;; list? (num?) -> measured-value?
-(define (calculate-stats vals)
-  (measured-value
-   (mean vals)
-   (if (= 0 (mean vals))
-       ;; TODO: what is the appropriate return value?
-       +inf.0
-       (coeff-of-variation vals))))
-
-;; list? (num?) -> num?
-(define (coeff-of-variation vals)
-  (/ (stddev vals) (mean vals)))
+    (print-results 'sig-improvement "Performance improvements")
+    (print-results 'sig-regression "Performance regressions")
+    (print-results 'not-sig "Not statistically significant")
+    (record-results new-results file-prefix)))
 
 ;; list? (benchmark-trial-stats?) -> void
 (define (print-times trial-times)
@@ -163,21 +173,17 @@
   (let-values ([(_ cpu real gc) (time-apply thunk '())])
     (report-time (benchmark-trial-time cpu real gc))))
 
-(define (get-past-results)
-  (if (file-exists? ".benchmarks")
-      (file->value ".benchmarks" #:mode 'text)
-      (list)))
+(define bench-suff ".bench")
 
-(define (record-results results)
-  (write-to-file results ".benchmarks" #:mode 'text #:exists 'truncate))
+;; string? -> list? (benchmark-result?)
+(define (get-past-results pref)
+  (let ([file (string-append pref bench-suff)])
+    (if (file-exists? file)
+        (file->value file #:mode 'text)
+        (list))))
 
-;; benchmark-result? benchmark-result? -> bool
-;; TODO: this is wrong, fix it using confidence intervals
-(define (regression? br1 br2)
-  (< (measured-value-mean
-      (benchmark-trial-stats-real
-       (benchmark-result-trial-stats br1)))
-     (measured-value-mean
-      (benchmark-trial-stats-real
-       (benchmark-result-trial-stats br2)))))
+;; string -> list? (benchmark-result?)
+(define (record-results results pref)
+  (let ([file (string-append pref bench-suff)])
+    (write-to-file results file #:mode 'text #:exists 'truncate)))
 

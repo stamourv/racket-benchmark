@@ -21,6 +21,9 @@
  ;; result
  (struct-out benchmark-result)
  mk-benchmark-result
+ ;; comparison of benchmarks
+ (struct-out benchmark-comparison)
+ mk-benchmark-comparison
  )
 
 ;; define data representation
@@ -78,8 +81,16 @@
   #:prefab
   )
 
-(define (mk-benchmark-result opts trial-stats)
-  (benchmark-result opts trial-stats))
+(define mk-benchmark-result benchmark-result)
+
+(struct benchmark-comparison
+  (result          ;; 'sig-improvement 'sig-regression 'not-sig
+   opts            ;; benchmark-opts?
+   )
+  #:transparent
+  )
+
+(define mk-benchmark-comparison benchmark-comparison)
 
 ;; raw time of a single trial
 (struct benchmark-trial-time
@@ -101,10 +112,11 @@
 
 (struct measured-value
   (mean                ;; flonum?
+   samples             ;; list? (flonum?)
    coeff-of-var        ;; flonum?
-   ;; conf-lb             ;; flonum?
-   ;; conf-ub             ;; flonum?
-   ;; conf-level          ;; flonum?
+   conf-lb             ;; flonum?
+   conf-ub             ;; flonum?
+   conf-level          ;; flonum?
    )
   #:prefab
   )
