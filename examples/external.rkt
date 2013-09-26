@@ -9,7 +9,7 @@
 
 (define (fib-internal n)
   (fib n)
-  (time-one (lambda () (fib n)))
+  (time-one (lambda () (for ([i 100]) (fib n))))
   (fib n))
 
 (define fib-internal-group

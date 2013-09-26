@@ -35,12 +35,12 @@ fi
 
 if [ $( echo "$BENCH2_OUT" | grep -c "$BENCH2_EXPECTED_OUT") == "0" ]
 then
-    echo "FAILURE: Expected output $BENCH2_EXPECTED_OUT not found"
+    echo "FAILURE: Expected output \"$BENCH2_EXPECTED_OUT\" not found"
     echo "BENCH1_OUT: $BENCH1_OUT"
     echo "BENCH2_OUT: $BENCH2_OUT"
     exit 1
 else
-    echo "SUCCESS: Expected output $BENCH2_EXPECTED_OUT found"
+    echo "SUCCESS: Expected output \"$BENCH2_EXPECTED_OUT\" found"
     exit 0
 fi
 

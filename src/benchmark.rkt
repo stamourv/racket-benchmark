@@ -47,6 +47,7 @@
 (define (append-default-opts o) (append-opts o default-opts))
 
 ;; (benchmark-one? or benchmark-group?) -> list? (benchmark-result?)
+;; TODO: clean up
 (define (run-benchmarks benchmarks
                         #:benchmark-opts [benchmark-opts nothing]
                         #:results-file-prefix [results-file-prefix "default"])
@@ -101,8 +102,9 @@
      [(benchmark-one? bs) (list (run-one bs))]
      [else
       (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
-  (check-results (run-benchmarks-aux benchmarks benchmark-opts)
-                 results-file-prefix))
+  (let ([results (run-benchmarks-aux benchmarks benchmark-opts)])
+    (check-results results results-file-prefix)
+    results))
 
 ;; list? (benchmark-result?) string? -> void
 (define (check-results new-results file-prefix)
@@ -162,12 +164,6 @@
    (show-measured-value (benchmark-trial-stats-real trial-times))
    (show-measured-value (benchmark-trial-stats-gc trial-times))))
 
-;; measured-value? -> string?
-(define (show-measured-value mv)
-  (format "mean: ~a, coeff-of-var: ~a"
-          (exact->inexact (measured-value-mean mv))
-          (exact->inexact (measured-value-coeff-of-var mv))))
-
 ;; procedure? -> void
 (define (time-one thunk)
   (let-values ([(_ cpu real gc) (time-apply thunk '())])
@@ -182,8 +178,7 @@
         (file->value file #:mode 'text)
         (list))))
 
-;; string -> list? (benchmark-result?)
+;; list? (benchmark-result?) string? -> void
 (define (record-results results pref)
   (let ([file (string-append pref bench-suff)])
     (write-to-file results file #:mode 'text #:exists 'truncate)))
-
