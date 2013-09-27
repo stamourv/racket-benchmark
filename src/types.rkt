@@ -26,8 +26,6 @@
  mk-benchmark-comparison
  )
 
-;; define data representation
-
 (struct nothing-s ())
 (define nothing (nothing-s))
 

@@ -1,6 +1,7 @@
 #lang racket
 
 (require rackunit)
+(require "../src/results.rkt")
 (require "../src/benchmark.rkt")
 
 ;; benchmark tests
