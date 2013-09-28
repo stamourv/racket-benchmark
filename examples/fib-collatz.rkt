@@ -28,7 +28,7 @@
    (list
     (mk-benchmark-one "collatz 1000" (lambda () (collatz-range 1000)))
     (mk-benchmark-one "collatz 10000" (lambda () (collatz-range 10000))))
-   (mk-benchmark-opts #:num-trials 31 #:itrs-per-trial 31)))
+   (mk-benchmark-opts #:discard-first #f #:num-trials 30 #:itrs-per-trial 30)))
 
 (define collatz-and-fib
   (mk-benchmark-group "" (list fib-group collatz-group)))

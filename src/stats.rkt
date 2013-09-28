@@ -87,7 +87,7 @@
                default-z
                (error (format "confidence level ≠ ~a" default-conf-level)))])
     (if (< n 30)
-        (error "number of samples must be ≥ 30")
+        (error (format "number of samples (~a) must be ≥ 30" n))
         (cons (- arith-mean (* z (/ std-dev (sqrt n))))
               (+ arith-mean (* z (/ std-dev (sqrt n))))))))
 

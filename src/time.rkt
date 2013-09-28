@@ -14,7 +14,7 @@
 (define (report-time time) (log-message timing-logger 'info "" time))
 
 ;; procedure? -> void
-(define (time-one thunk)
+(define (time-internal thunk)
   (let-values ([(_ cpu real gc) (time-apply thunk '())])
     (report-time (benchmark-trial-time cpu real gc))))
 

@@ -12,8 +12,7 @@
  mk-benchmark-group
  mk-benchmark-opts
  run-benchmarks
- time-one
- (struct-out benchmark-trial-time)
+ time-internal
  )
 
 ;; this module implements a simple benchmarking library

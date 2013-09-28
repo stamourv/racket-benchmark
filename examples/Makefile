@@ -1,5 +1,5 @@
 .PHONY: tests
-tests: fib-regression fib-improvement external
+tests: fib-regression fib-improvement fib-collatz.rkt_test internal-external.rkt_test
 
 .PHONY: clean
 clean:
@@ -13,6 +13,5 @@ fib-regression:
 fib-improvement:
 	bash check_results.sh slow-fib.rkt fast-fib.rkt "Performance improvements"
 
-.PHONY: external
-external:
-	racket external.rkt > /dev/null
+%_test:
+	racket $* > /dev/null
