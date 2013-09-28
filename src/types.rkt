@@ -70,6 +70,7 @@
    itrs-per-trial  ;; exact-integer?
    discard-first   ;; boolean?
    time-external   ;; boolean?
+   plot-file       ;; string?
    )
   #:prefab
   )
@@ -80,11 +81,12 @@
          #:num-trials [num-trials nothing]
          #:itrs-per-trial [itrs-per-trial nothing]
          #:discard-first [discard-first nothing]
-         #:time-external [time-external nothing])
+         #:time-external [time-external nothing]
+         #:plot-file [plot-file nothing])
   (benchmark-opts name gc-between num-trials itrs-per-trial
-                  discard-first time-external))
+                  discard-first time-external plot-file))
 
-(define default-opts (benchmark-opts "" #t 50 1000 #t #t))
+(define default-opts (benchmark-opts "" #t 100 500 #t #t #f))
 
 (struct benchmark-result
   (opts            ;; benchmark-opts?
