@@ -110,6 +110,4 @@
 
 ;; list? (num?) -> num?
 ;; stddev calculates population standard deviation, but we want sample stddev
-(define (sample-stddev vals)
-  (let ([n (length vals)])
-    (* (stddev vals) (sqrt (/ n (- n 1))))))
+(define (sample-stddev vals) (stddev vals #:bias #t))

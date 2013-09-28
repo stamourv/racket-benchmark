@@ -6,9 +6,11 @@
 (require "print.rkt")
 (require "time.rkt")
 (require "results.rkt")
+(require "external.rkt")
 
 (provide
  mk-benchmark-one
+ mk-shell-benchmark
  mk-benchmark-group
  mk-benchmark-opts
  run-benchmarks
@@ -18,11 +20,11 @@
 ;; this module implements a simple benchmarking library
 (define (append-opts o1 o2)
   (define (filter-nothing lst)
-    (filter (lambda (x) (not (nothing-s? x))) lst))
+    (filter (lambda (x) (not (nothing? x))) lst))
   (define (relname a b)
     (if (equal? "" a) b (string-append a "/" b)))
   (define (name-val o)
-    (if (or (nothing-s? o) (nothing-s? (benchmark-opts-name o)))
+    (if (or (nothing? o) (nothing? (benchmark-opts-name o)))
         ""
         (benchmark-opts-name o)))
   (define (opt-val fn)

@@ -10,7 +10,7 @@
 ;; list? (benchmark-trial-stats?) -> void
 (define (print-times trial-times)
   (printf
-   "cpu: ~a\nreal: ~a\ngc: ~a\n"
+   "cpu time: ~a real time: ~a gc time: ~a\n"
    (show-measured-value (benchmark-trial-stats-cpu trial-times))
    (show-measured-value (benchmark-trial-stats-real trial-times))
    (show-measured-value (benchmark-trial-stats-gc trial-times))))

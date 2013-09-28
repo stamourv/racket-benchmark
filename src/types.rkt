@@ -1,11 +1,13 @@
 #lang racket
 
 (provide
- (struct-out nothing-s)
  nothing
+ nothing?
  ;; single benchmark
  (struct-out benchmark-one)
  mk-benchmark-one
+ ;; shell benchmarks
+ (struct-out shell-benchmark)
  ;; grouping benchmarks together by name
  (struct-out benchmark-group)
  mk-benchmark-group
@@ -15,6 +17,7 @@
  default-opts
  ;; time of a single trial
  (struct-out benchmark-trial-time)
+ (struct-out shell-benchmark-trial-time)
  ;; time of multiple trials
  (struct-out benchmark-trial-stats)
  (struct-out measured-value)
@@ -28,6 +31,7 @@
 
 (struct nothing-s ())
 (define nothing (nothing-s))
+(define nothing? nothing-s?)
 
 (struct benchmark-one
   (thunk           ;; procedure?
@@ -38,6 +42,16 @@
 
 (define (mk-benchmark-one name thunk [opts (mk-benchmark-opts)])
   (benchmark-one thunk (struct-copy benchmark-opts opts [name name])))
+
+(struct shell-benchmark benchmark-one
+  (configure
+   build
+   run
+   extract-result
+   clean
+   )
+  #:transparent
+  )
 
 (struct benchmark-group
   (benchmarks      ;; list? of benchmark-one?
@@ -99,6 +113,15 @@
   #:prefab
   )
 
+(struct shell-benchmark-trial-time benchmark-trial-time
+  (configure-time  ;; flonum?
+   build-time      ;; flonum?
+   run-time        ;; flonum?
+   clean-time      ;; flonum?
+   )
+  #:prefab
+  )
+
 ;; trial times
 (struct benchmark-trial-stats
   (cpu             ;; measured-value?
@@ -118,3 +141,4 @@
    )
   #:prefab
   )
+
