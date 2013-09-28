@@ -5,7 +5,7 @@
 (provide
  report-time
  receive-time
- time-one
+ time-internal
  )
 
 ;; for internal timing
@@ -27,7 +27,7 @@
         (error (format "No log message received within ~a s, exiting." timeout))
         (vector-ref trial-time 2))))
 
-;; void
+;; num? -> void
 (define (discard-extra-times timeout)
   (when (sync/timeout timeout timing-logger-receiver)
     (discard-extra-times timeout)))
