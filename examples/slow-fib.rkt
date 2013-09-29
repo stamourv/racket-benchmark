@@ -8,5 +8,4 @@
  (mk-benchmark-one
   "fib"
   (lambda () (fib 15))
-  (mk-benchmark-opts #:gc-between #f))
- #:results-file-prefix "fib")
+  (mk-benchmark-opts #:gc-between #f)))

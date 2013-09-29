@@ -2,6 +2,7 @@
 
 (require "types.rkt")
 (require "stats.rkt")
+(require "util.rkt")
 
 (provide
  check-results
@@ -10,7 +11,7 @@
  )
 
 ;; list? (benchmark-result?) string? -> void
-(define (check-results new-results file-prefix)
+(define (check-results new-results file-base)
   ;; make a hash table: options -> results
   (define (mk-result-table res)
      (for/hash ([h res])
@@ -18,7 +19,7 @@
       (values (benchmark-result-opts h) h)))
   (let* ([new-results-table (mk-result-table new-results)]
          [past-results-table
-          (mk-result-table (get-past-results file-prefix))]
+          (mk-result-table (get-past-results file-base))]
          ;; comparable benchmarks are those with the same benchmark-opts?
          [comparable-benchmarks
           (set->list
@@ -55,18 +56,19 @@
     (print-results 'sig-improvement "Performance improvements")
     (print-results 'sig-regression "Performance regressions")
     (print-results 'not-sig "Not statistically significant")
-    (record-results new-results file-prefix)))
+    (record-results new-results file-base)))
 
-(define bench-suff ".bench")
+(define bench-dir "benches/")
 
 ;; string? -> list? (benchmark-result?)
-(define (get-past-results pref)
-  (let ([file (string-append pref bench-suff)])
+(define (get-past-results file-base)
+  (let ([file (string-append file-base (string-append bench-dir file-base))])
     (if (file-exists? file)
         (file->value file #:mode 'text)
         (list))))
 
 ;; list? (benchmark-result?) string? -> void
-(define (record-results results pref)
-  (let ([file (string-append pref bench-suff)])
+(define (record-results results file-base)
+  (let ([file (string-append bench-dir file-base)])
+    (maybe-mkdir bench-dir)
     (write-to-file results file #:mode 'text #:exists 'truncate)))

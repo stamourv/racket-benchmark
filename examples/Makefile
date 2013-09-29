@@ -4,6 +4,7 @@ tests: fib-regression fib-improvement fib-collatz.rkt_test internal-external.rkt
 .PHONY: clean
 clean:
 	rm -f *.bench
+	rm -rf plots benches
 
 .PHONY: fib-regression
 fib-regression:

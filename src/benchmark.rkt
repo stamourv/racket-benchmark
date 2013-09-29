@@ -16,7 +16,7 @@
  mk-benchmark-opts
  run-benchmarks
  time-internal
- plot-benchmark-result
+ plot-benchmarks
  )
 
 ;; this module implements a simple benchmarking library
@@ -49,7 +49,7 @@
 ;; TODO: clean up
 (define (run-benchmarks benchmarks
                         #:benchmark-opts [benchmark-opts nothing]
-                        #:results-file-prefix [results-file-prefix "default"])
+                        #:results-file-base [results-file-base "default.bench"])
   (define (run-benchmarks-aux bs opts)
     ;; run a benchmark (benchmark-one? or benchmark-group?)
     ;; from benchmark-group? bs, remembering the name and
@@ -102,7 +102,7 @@
      [else
       (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
   (let ([results (run-benchmarks-aux benchmarks benchmark-opts)])
-    (check-results results results-file-prefix)
+    (check-results results results-file-base)
     results))
 
 

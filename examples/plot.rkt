@@ -12,7 +12,16 @@
      #:gc-between #f
      #:plot-file "fib20.pdf")))
 
-(plot-benchmark-result (car (run-benchmarks (fib-bench 20))))
+(define fib-vals (list 25 26))
+
+(plot-benchmarks
+ (map (lambda (x) (format "fibs/fib ~a" x)) fib-vals)
+ (run-benchmarks
+  (mk-benchmark-group
+   "fibs"
+   (map fib-bench fib-vals)))
+ "fibs"
+ "fibs.pdf")
 
 
 

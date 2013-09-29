@@ -29,9 +29,7 @@
  mk-benchmark-comparison
  )
 
-(struct nothing-s ())
-(define nothing (nothing-s))
-(define nothing? nothing-s?)
+;;;;;;;;;;;;;;;;;;;;;;;;; Specifying Benchmarks ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (struct benchmark-one
   (thunk           ;; procedure?
@@ -88,6 +86,8 @@
 
 (define default-opts (benchmark-opts "" #t 100 500 #t #t #f))
 
+;;;;;;;;;;;;;;;;;;;;;;;;; Benchmark Results ;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (struct benchmark-result
   (opts            ;; benchmark-opts?
    trial-stats     ;; benchmark-trial-stats?
@@ -97,16 +97,8 @@
 
 (define mk-benchmark-result benchmark-result)
 
-(struct benchmark-comparison
-  (result          ;; 'sig-improvement 'sig-regression 'not-sig
-   opts            ;; benchmark-opts?
-   )
-  #:transparent
-  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Times ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define mk-benchmark-comparison benchmark-comparison)
-
-;; raw time of a single trial
 (struct benchmark-trial-time
   (cpu             ;; exact-integer?
    real            ;; exact-integer?
@@ -124,7 +116,6 @@
   #:prefab
   )
 
-;; trial times
 (struct benchmark-trial-stats
   (cpu             ;; measured-value?
    real            ;; measured-value?
@@ -132,6 +123,8 @@
    )
   #:prefab
   )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Statistics ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (struct measured-value
   (mean                ;; flonum?
@@ -144,3 +137,17 @@
   #:prefab
   )
 
+(struct benchmark-comparison
+  (result          ;; 'sig-improvement 'sig-regression 'not-sig
+   opts            ;; benchmark-opts?
+   )
+  #:transparent
+  )
+
+(define mk-benchmark-comparison benchmark-comparison)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Miscellaneous ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(struct nothing-s ())
+(define nothing (nothing-s))
+(define nothing? nothing-s?)

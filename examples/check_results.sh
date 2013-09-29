@@ -3,7 +3,7 @@
 set -eu
 
 function find_bench_file {
-    BENCH_FILE=$(ls -t *.bench | head)
+    BENCH_FILE=$(ls -t benches/*.bench | head)
 
     if [ -z "$BENCH_FILE" ]
     then
