@@ -62,7 +62,7 @@
 
 ;; string? -> list? (benchmark-result?)
 (define (get-past-results file-base)
-  (let ([file (string-append file-base (string-append bench-dir file-base))])
+  (let ([file (string-append bench-dir file-base)])
     (if (file-exists? file)
         (file->value file #:mode 'text)
         (list))))
@@ -72,3 +72,4 @@
   (let ([file (string-append bench-dir file-base)])
     (maybe-mkdir bench-dir)
     (write-to-file results file #:mode 'text #:exists 'truncate)))
+

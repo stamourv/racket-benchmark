@@ -7,13 +7,7 @@
 (provide
  raw-to-stats
  compare-benchmarks
- show-measured-value
- ;; TODO: these exports are only for testing
- confidence-interval
- sample-stddev
- coeff-of-variation
- calculate-stats
- )
+ show-measured-value)
 
 ;; assumes random errors can be modeled by a normal distribution
 ;; TODO: how do we know if our errors can be modeled by a normal distribution?
@@ -38,6 +32,33 @@
 ;;          masid = {3371776}
 ;;          }
 
+
+(module+ test
+  (require rackunit)
+
+  (struct tc
+    (vals
+     conf-lb
+     conf-ub
+     sample-stddev
+     cov
+     )
+    #:transparent
+    )
+  
+  (define samples
+    (list
+     (tc (for/list ([i 30]) 0) 0 0 0 +inf.0)
+     (tc (for/list ([i 30]) i) 11.3497 17.6502 8.8034 .6071)
+     (tc (for/list ([i 50]) i) 20.4594 28.5406 14.5774 .5950)
+     (tc (for/list ([i (in-range 50 100)]) i) 70.4594 78.5406 14.5774 .1957)
+     (tc (for/list ([i 100]) i) 43.8139 55.1861 29.01149 .5861)
+     ))
+  
+  (define delta .001)
+  (define (close? a b) (>= (+ delta (min a b)) (max a b)))
+  (define (check-close? a b msg) (check close? a b msg)))
+
 ;; list? (benchmark-trial-time?) -> benchmark-trial-stats?
 (define (raw-to-stats times)
   (let ([cpu (map benchmark-trial-time-cpu times)]
@@ -46,6 +67,19 @@
     (benchmark-trial-stats (calculate-stats cpu)
                            (calculate-stats real)
                            (calculate-stats gc))))
+
+(module+ test
+  (define (test-calculate-stats)
+    (for ([s samples])
+      (let ([stats (calculate-stats (tc-vals s))])
+        (for ([i (list measured-value-coeff-of-var
+                       measured-value-conf-lb
+                       measured-value-conf-ub)]
+              [j (list tc-cov
+                       tc-conf-lb
+                       tc-conf-ub)])
+          (check-close? (j s) (i stats) "calculate stats"))
+        (check-equal? (tc-vals s) (measured-value-samples stats))))))
 
 ;; currently using 'mean of differences' as described in 5.1.1 of Lilja
 ;; as equal benchmark-opts implies corresponding measurements
@@ -91,6 +125,15 @@
         (cons (- arith-mean (* z (/ std-dev (sqrt n))))
               (+ arith-mean (* z (/ std-dev (sqrt n))))))))
 
+(module+ test
+  (define (test-confidence-interval)
+    (for ([s samples])
+      (let* ([calculated-ci (confidence-interval (tc-vals s) default-conf-level)]
+             [ci-lb (car calculated-ci)]
+             [ci-ub (cdr calculated-ci)])
+        (check-close? (tc-conf-lb s) ci-lb "lower bound")
+        (check-close? (tc-conf-ub s) ci-ub "upper bound")))))
+
 ;; list? (num?) -> measured-value?
 (define (calculate-stats vals)
   (let* ([conf-level default-conf-level]
@@ -108,6 +151,24 @@
       +inf.0
       (/ (sample-stddev vals) (mean vals))))
 
+(module+ test
+  (define (test-coeff-of-variation)
+    (for ([s samples])
+      (let ([cov (coeff-of-variation (tc-vals s))])
+        (check-close? (tc-cov s) cov "coeff of var")))))
+
 ;; list? (num?) -> num?
 ;; stddev calculates population standard deviation, but we want sample stddev
 (define (sample-stddev vals) (stddev vals #:bias #t))
+
+(module+ test
+  (define (test-sample-stddev)
+    (for ([s samples])
+      (let ([stddev (sample-stddev (tc-vals s))])
+        (check-close? (tc-sample-stddev s) stddev "sample stddev")))))
+
+(module+ test
+  (test-confidence-interval)
+  (test-sample-stddev)
+  (test-coeff-of-variation)
+  (test-calculate-stats))

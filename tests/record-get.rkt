@@ -17,9 +17,8 @@
            (mk-benchmark-one
             "fib 10" (lambda () (fib 10))))
           (mk-benchmark-opts #:gc-between #f))
-         #:results-file-prefix "tmp-record-get")])
+         #:results-file-base "tmp-record-get")])
   (record-results results "record-get")
   (let ([read-results (get-past-results "record-get")])
-    (check-equal? results read-results)))
-
-
+    (check-equal? results read-results)
+    (delete-directory/files "benches")))
