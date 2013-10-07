@@ -6,7 +6,6 @@
 
 (provide
  raw-to-stats
- compare-benchmarks
  show-measured-value)
 
 ;; assumes random errors can be modeled by a normal distribution

@@ -16,7 +16,9 @@
          [configure-time (maybe-execute-cmd (shell-benchmark-configure b))]
          [build-time (maybe-execute-cmd (shell-benchmark-build b))]
          [run-times
-          (get-run-times (shell-benchmark-run b) (shell-benchmark-extract-result b))]
+          (get-run-times
+           (shell-benchmark-run b)
+           (shell-benchmark-extract-result b))]
          [clean-time (maybe-execute-cmd (shell-benchmark-clean b))]
          [btt (cdr run-times)]
          [run-time (car run-times)])

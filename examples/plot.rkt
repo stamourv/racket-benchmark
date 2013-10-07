@@ -6,13 +6,12 @@
 
 (define (fib-bench n)
   (mk-benchmark-one
-   (format "fib ~a" n) 
+   (format "fib ~a" n)
     (lambda () (fib n))
     (mk-benchmark-opts
-     #:gc-between #f
-     #:plot-file "fib20.pdf")))
+     #:gc-between #f)))
 
-(define fib-vals (list 25 26))
+(define fib-vals (list 20 21))
 
 (plot-benchmarks
  (map (lambda (x) (format "fibs/fib ~a" x)) fib-vals)
@@ -22,7 +21,3 @@
    (map fib-bench fib-vals)))
  "fibs"
  "fibs.pdf")
-
-
-
-

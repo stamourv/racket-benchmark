@@ -5,7 +5,6 @@
 (require "stats.rkt")
 (require "print.rkt")
 (require "time.rkt")
-(require "results.rkt")
 (require "external.rkt")
 (require "plot.rkt")
 
@@ -30,7 +29,8 @@
         ""
         (benchmark-opts-name o)))
   (define (opt-val fn)
-    (let ([filtered-opts (filter-nothing (map fn (filter-nothing (list o1 o2))))])
+    (let ([filtered-opts
+           (filter-nothing (map fn (filter-nothing (list o1 o2))))])
       (if (null? filtered-opts)
           nothing
           (car filtered-opts))))
@@ -39,9 +39,8 @@
         [trials (opt-val benchmark-opts-num-trials)]
         [itrs (opt-val benchmark-opts-itrs-per-trial)]
         [discard (opt-val benchmark-opts-discard-first)]
-        [time-external (opt-val benchmark-opts-time-external)]
-        [plot-file (opt-val benchmark-opts-plot-file)])
-    (benchmark-opts name gc trials itrs discard time-external plot-file)))
+        [time-external (opt-val benchmark-opts-time-external)])
+    (benchmark-opts name gc trials itrs discard time-external)))
 
 (define (append-default-opts o) (append-opts o default-opts))
 
@@ -101,8 +100,6 @@
      [(benchmark-one? bs) (list (run-one bs))]
      [else
       (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
-  (let ([results (run-benchmarks-aux benchmarks benchmark-opts)])
-    (check-results results results-file-base)
-    results))
+  (run-benchmarks-aux benchmarks benchmark-opts))
 
 
