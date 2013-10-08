@@ -2,7 +2,13 @@
 
 (require "../src/benchmark.rkt")
 
-(define files (list "fib5.rkt" "fib30.rkt"))
+(require plot)
+
+(define files (list
+               "external/fib5.rkt"
+               "external/fib30.rkt"
+               "external/collatz1000.rkt"
+               ))
 
 (define (jit-no-jit jit)
   (mk-benchmark-group
@@ -16,9 +22,12 @@
 (define results
   (run-benchmarks
    (mk-benchmark-group "" (list (jit-no-jit #t) (jit-no-jit #f)))
-   #:benchmark-opts (mk-benchmark-opts #:num-trials 50)))
+   #:benchmark-opts (mk-benchmark-opts #:num-trials 31)))
 
-
+(parameterize ([plot-x-ticks no-ticks])
+  (plot-file
+   (render-benchmark-alts (list "jit" "no jit") results "jit")
+   "jit-no-jit.pdf"))
 
 
 
