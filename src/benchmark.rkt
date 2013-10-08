@@ -99,7 +99,8 @@
       (append-map run-group-elem (benchmark-group-benchmarks bs))]
      [(benchmark-one? bs) (list (run-one bs))]
      [else
-      (error "Invalid benchmark: expected benchmark? or benchmark-group?")]))
+      (error
+       (format "Invalid benchmark: expected benchmark? or benchmark-group? Got: ~a" bs))]))
   (run-benchmarks-aux benchmarks benchmark-opts))
 
 
