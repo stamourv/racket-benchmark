@@ -15,7 +15,7 @@
  mk-benchmark-opts
  run-benchmarks
  time-internal
- plot-benchmarks
+ render-benchmark-alts
  )
 
 ;; this module implements a simple benchmarking library

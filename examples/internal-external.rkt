@@ -1,36 +1,46 @@
 #lang racket
 
-(require rackunit)
+(require rackunit plot)
 (require "../src/benchmark.rkt")
 
 ;; benchmark tests
 (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
 
 (define (fib-internal n)
-  (fib n)
+;  (fib n)
   (time-internal (lambda () (for ([i 100]) (fib n))))
-  (fib n))
+;  (fib n)
+  )
+
+(define (mk-fib-bench n fn)
+  (mk-benchmark-one (format "fib ~a" n) (lambda () (fn n))))
+
+(define fib-inputs (list 19 20 21))
 
 (define fib-internal-group
   (mk-benchmark-group
    "internals"
-   (list (mk-benchmark-one "fib-internal 1" (lambda () (fib-internal 1)))
-         (mk-benchmark-one "fib-internal 2" (lambda () (fib-internal 2)))
-         (mk-benchmark-one "fib-internal 20" (lambda () (fib-internal 20)))
-         (mk-benchmark-one "fib-internal 21" (lambda () (fib-internal 21))))
+   (map (lambda (n) (mk-fib-bench n fib-internal)) fib-inputs)
    (mk-benchmark-opts #:time-external #f)))
 
-(define fib-external-group
+(define (fib-external-group n)
   (mk-benchmark-group
-   "externals"
-   (list (mk-benchmark-one "fib 1" (lambda () (fib 1)))
-         (mk-benchmark-one "fib 2" (lambda () (fib 2)))
-         (mk-benchmark-one "fib 20" (lambda () (fib 20)))
-         (mk-benchmark-one "fib 21" (lambda () (fib 21))))))
+   (format "externals~a" n)
+   (map (lambda (m) (mk-fib-bench m fib)) fib-inputs)))
 
-(run-benchmarks
- (mk-benchmark-group
-  ""
-  (list fib-internal-group fib-external-group)
-  (mk-benchmark-opts #:gc-between #f #:itrs-per-trial 100)))
+(define num-external-groups 1)
 
+(define external-nums (for/list ([i num-external-groups]) i))
+
+(define external-names (map (lambda (n) (format "externals~a" n)) external-nums))
+
+(define results
+  (run-benchmarks
+   (mk-benchmark-group ""
+    (cons fib-internal-group (map fib-external-group external-nums))
+    (mk-benchmark-opts #:gc-between #f #:num-trials 31 #:itrs-per-trial 100)))) 
+
+(parameterize ([plot-x-ticks no-ticks])
+  (plot-file
+   (render-benchmark-alts (cons "internals" external-names) results)
+   "internal-external.pdf"))

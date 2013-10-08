@@ -13,8 +13,12 @@
            (format (if jit "racket ~a" "racket -j ~a") f)))
     files)))
 
-;; jit
-(run-benchmarks
- (mk-benchmark-group "" (list (jit-no-jit #t) (jit-no-jit #f))))
+(define results
+  (run-benchmarks
+   (mk-benchmark-group "" (list (jit-no-jit #t) (jit-no-jit #f)))
+   #:benchmark-opts (mk-benchmark-opts #:num-trials 50)))
+
+
+
 
 
