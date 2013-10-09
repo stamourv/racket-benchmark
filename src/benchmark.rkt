@@ -5,16 +5,20 @@
 (require "stats.rkt")
 (require "print.rkt")
 (require "time.rkt")
+(require (for-syntax "time.rkt"))
 (require "external.rkt")
 (require "plot.rkt")
 
 (provide
- mk-benchmark-one
+ mk-b1
+ b1
+ mk-bgroup
+ bgroup
  mk-shell-benchmark
- mk-benchmark-group
- mk-benchmark-opts
+ bopts
  run-benchmarks
  time-internal
+ benchmark-trial-time
  render-benchmark-alts
  )
 
@@ -93,7 +97,7 @@
                     times)]
                [stats (raw-to-stats trimmed-times)])
           (print-times (raw-to-stats trimmed-times))
-          (mk-benchmark-result final-opts stats))))
+          (bresult final-opts stats))))
     (cond
      [(benchmark-group? bs)
       (append-map run-group-elem (benchmark-group-benchmarks bs))]

@@ -99,7 +99,7 @@
                     [(< (measured-value-conf-ub diff-stats) 0)
                      'sig-regression]
                     [else 'not-sig])])
-    (mk-benchmark-comparison sig (benchmark-result-opts br1))))
+    (bcomparison sig (benchmark-result-opts br1))))
 
 ;; From Lilja, appendix C.1 for n = ∞ (normal distribution)
 (define default-conf-level .95)

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "types.rkt")
+(require "types.rkt" (for-syntax "types.rkt"))
 (require "time.rkt")
 (require racket/system)
 
@@ -69,21 +69,20 @@
          #:build [build nothing]                 ;; command
          #:extract-result [extract-result default-extract-result] ;; ??
          #:clean [clean nothing]                 ;; command
-         #:opts [opts (mk-benchmark-opts
+         #:opts [opts (bopts
                        #:itrs-per-trial 1
                        #:time-external #f)]) ;; benchmark-opts?
-  (mk-benchmark-one
+  (b1
    name
-   (lambda ()
-     (report-time (time-shell-cmd
-                   (shell-benchmark
-                    nothing
-                    opts
-                    configure
-                    build
-                    run
-                    extract-result
-                    clean))))
+   (report-time (time-shell-cmd
+                 (shell-benchmark
+                  nothing
+                  opts
+                  configure
+                  build
+                  run
+                  extract-result
+                  clean)))
    opts))
 
 ;; string? -> benchmark-trial-time?

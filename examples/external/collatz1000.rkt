@@ -10,4 +10,3 @@
             (stream->list (in-range 0 m))))
 
 (time (collatz-range 1000))
-

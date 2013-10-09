@@ -3,15 +3,12 @@
 (require rackunit)
 (require "../src/benchmark.rkt")
 
-;; benchmark tests
 (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
 (define fib-group
-  (mk-benchmark-group
-   "fibs"
-   (list (mk-benchmark-one "fib 1" (lambda () (fib 1)))
-         (mk-benchmark-one "fib 2" (lambda () (fib 2)))
-         (mk-benchmark-one "fib 20" (lambda () (fib 20)))
-         (mk-benchmark-one "fib 21" (lambda () (fib 21))))))
+  (bgroup"fibs" (list (b1 (fib 1))
+                      (b1 (fib 2))
+                      (b1 (fib 20))
+                      (b1 (fib 21)))))
 
 (define (collatz n)
   (if (even? n)
@@ -23,18 +20,12 @@
             (stream->list (in-range 0 m))))
 
 (define collatz-group
-  (mk-benchmark-group
-   "collatz"
-   (list
-    (mk-benchmark-one "collatz 1000" (lambda () (collatz-range 1000)))
-    (mk-benchmark-one "collatz 10000" (lambda () (collatz-range 10000))))
-   (mk-benchmark-opts #:discard-first #f
-                      #:num-trials 30
-                      #:itrs-per-trial 30)))
+  (bgroup "collatz" (list (b1 (collatz-range 1000))
+                          (b1 (collatz-range 2000)))))
 
 (define collatz-and-fib
-  (mk-benchmark-group "" (list fib-group collatz-group)
-                      (mk-benchmark-opts #:gc-between #f)))
+  (bgroup ""
+          (list fib-group collatz-group)
+          (bopts #:gc-between #f)))
 
 (run-benchmarks collatz-and-fib)
-

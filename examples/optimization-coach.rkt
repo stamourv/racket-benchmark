@@ -1,57 +1,48 @@
 #lang racket
 
-(require "../src/benchmark.rkt" plot)
-
 (module typed typed/racket
   (require racket/unsafe/ops)
   (require/typed "../src/time.rkt"
                  [time-internal ((-> Any) -> Void)])
 
-  
-  (provide complete-thunks partial-thunks)
-  (define n 1000000)
-  (define m 10000)
-  (define l (make-list 10000 "a"))
-  (define l2 (build-list 1000000 (lambda: ([x : Integer]) x)))
-  
-  (define complete-thunks
-    (list
-     (lambda () (time-internal
-                 (lambda () (for ([i (in-range n)]) (unsafe-fx+ i 1)))))
-     (lambda () (time-internal
-                 (lambda () (for ([i (in-range m)]) (format "eh~a" i)))))
-     (lambda () (time-internal
-                 (lambda () (for ([i (in-list l)]) (format "eh~a" i)))))
-     (lambda () (time-internal
-                 (lambda () (for ([i (in-list l2)]) (unsafe-fx+ i 1)))))))
-  
-  (define partial-thunks
-    (list
-     (lambda () (time-internal (lambda () (for ([i n]) (unsafe-fx+ i 1)))))
-     (lambda () (time-internal (lambda () (for ([i m]) (format "eh~a" i)))))
-     (lambda () (time-internal (lambda () (for ([i l]) (format "eh~a" i)))))
-     (lambda () (time-internal (lambda () (for ([i l2]) (unsafe-fx+ i 1))))))))
+    (provide complete-thunks partial-thunks names)
 
-(require (submod "." typed))
+    (define n 1000000)
+    (define m 10000)
+    (define l (make-list 10000 "a"))
+    (define l2 (build-list 1000000 (lambda: ([x : Integer]) x)))
 
-(define names (list "unsafe-fx+ int" "format int" "format list" "unsafe-fx+ list"))
+    (define names
+      (list "unsafe-fx+ int" "format int" "format list" "unsafe-fx+ list"))
+
+    (define complete-thunks
+      (list
+       (thunk (time-internal (thunk (for ([i (in-range n)]) (unsafe-fx+ i 1)))))
+       (thunk (time-internal (thunk (for ([i (in-range m)]) (format "eh~a" i)))))
+       (thunk (time-internal (thunk (for ([i (in-list l)]) (format "eh~a" i)))))
+       (thunk (time-internal (thunk (for ([i (in-list l2)]) (unsafe-fx+ i 1)))))))
+
+    (define partial-thunks
+      (list
+       (thunk (time-internal (thunk (for ([i n]) (unsafe-fx+ i 1)))))
+       (thunk (time-internal (thunk (for ([i m]) (format "eh~a" i)))))
+       (thunk (time-internal (thunk (for ([i l]) (format "eh~a" i)))))
+       (thunk (time-internal (thunk (for ([i l2]) (unsafe-fx+ i 1))))))))
+
+(require (submod "." typed) "../src/benchmark.rkt" plot)
 
 (define benches
-  (mk-benchmark-group
+  (mk-bgroup
    ""
    (list
-    (mk-benchmark-group
-     "partial"
-     (map mk-benchmark-one names partial-thunks))
-    (mk-benchmark-group
-     "complete"
-     (map mk-benchmark-one names complete-thunks)))))
+    (mk-bgroup "partial" (map mk-b1 names partial-thunks))
+    (mk-bgroup "complete" (map mk-b1 names complete-thunks)))))
 
 (define results
   (run-benchmarks
    benches
    #:benchmark-opts
-   (mk-benchmark-opts #:gc-between #f #:num-trials 31 #:itrs-per-trial 10)))
+   (bopts #:gc-between #f #:num-trials 31 #:itrs-per-trial 10)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

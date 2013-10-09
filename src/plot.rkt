@@ -59,7 +59,7 @@
                  [trial-stats (benchmark-result-trial-stats br)])
              (normalize-br
               (norm-br new-name)
-              (mk-benchmark-result
+              (bresult
                (struct-copy benchmark-opts opts [name new-name])
                trial-stats)))
            #f))
