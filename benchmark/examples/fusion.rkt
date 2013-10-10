@@ -1,7 +1,6 @@
 #lang racket
 
-(require "../src/benchmark.rkt")
-(require plot (for-syntax syntax/parse))
+(require plot benchmark (for-syntax syntax/parse))
 
 (define (add1 n) (+ n 1))
 (define (square n) (* n n))

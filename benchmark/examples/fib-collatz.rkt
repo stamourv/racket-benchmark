@@ -1,7 +1,6 @@
 #lang racket
 
-(require rackunit)
-(require "../src/benchmark.rkt")
+(require benchmark)
 
 (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
 (define fib-group

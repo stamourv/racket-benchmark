@@ -7,4 +7,4 @@
    - Miniboxing?
    - Claire's benchmarks
    - Chaperones paper, Stevie (source from Vincent)
-   - Christos
+   - Christos (option contracts)

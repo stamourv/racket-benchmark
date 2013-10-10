@@ -1,7 +1,6 @@
 #lang racket
 
-(require plot)
-(require "../src/benchmark.rkt")
+(require plot benchmark)
 
 (define num-trials 5)
 

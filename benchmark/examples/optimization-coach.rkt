@@ -2,7 +2,7 @@
 
 (module typed typed/racket
   (require racket/unsafe/ops)
-  (require/typed "../src/time.rkt"
+  (require/typed benchmark
                  [time-internal ((-> Any) -> Void)])
 
     (provide complete-thunks partial-thunks names)
@@ -29,7 +29,7 @@
        (thunk (time-internal (thunk (for ([i l]) (format "eh~a" i)))))
        (thunk (time-internal (thunk (for ([i l2]) (unsafe-fx+ i 1))))))))
 
-(require (submod "." typed) "../src/benchmark.rkt" plot)
+(require (submod "." typed) benchmark plot)
 
 (define benches
   (mk-bgroup

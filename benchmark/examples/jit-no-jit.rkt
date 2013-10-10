@@ -1,8 +1,6 @@
 #lang racket
 
-(require "../src/benchmark.rkt")
-
-(require plot)
+(require plot benchmark)
 
 (define files
   (list

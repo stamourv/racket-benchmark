@@ -5,5 +5,10 @@ tests:
 
 .PHONY: clean
 clean:
+	rm -rf planet-docs
 	make -C examples clean
-	make -C tests clean
+
+.PHONY: docs
+docs:
+	raco setup
+	raco doc benchmark
