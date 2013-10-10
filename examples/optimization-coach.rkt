@@ -41,7 +41,6 @@
 (define results
   (run-benchmarks
    benches
-   #:benchmark-opts
    (bopts #:gc-between #f #:num-trials 31 #:itrs-per-trial 10)))
 
 (parameterize ([plot-x-ticks no-ticks])

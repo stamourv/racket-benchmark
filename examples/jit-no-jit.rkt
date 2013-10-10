@@ -22,7 +22,7 @@
 (define results
   (run-benchmarks
    (mk-bgroup "" (list (jit-no-jit #t) (jit-no-jit #f)))
-   #:benchmark-opts (bopts #:num-trials 31)))
+   (bopts #:num-trials 31)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

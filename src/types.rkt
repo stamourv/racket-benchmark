@@ -2,33 +2,31 @@
 
 (require (for-syntax syntax/parse))
 
-(provide
- ;; single benchmark
- (struct-out benchmark-one)
- mk-b1
- b1
- ;; shell benchmarks
- (struct-out shell-benchmark)
- ;; grouping benchmarks together by name
- (struct-out benchmark-group)
- mk-bgroup
- bgroup
- ;; options
- (struct-out benchmark-opts)
- bopts
- default-opts
- ;; for representing unset fields in options
- nothing
- nothing?
- ;; time of a single trial
- (struct-out benchmark-trial-time)
- (struct-out shell-benchmark-trial-time)
- ;; time of multiple trials
- (struct-out benchmark-trial-stats)
- (struct-out measured-value)
- (struct-out benchmark-result)
- bresult
- )
+(provide ;; single benchmark
+         (struct-out benchmark-one)
+         mk-b1
+         b1
+         ;; shell benchmarks
+         (struct-out shell-benchmark)
+         ;; grouping benchmarks together by name
+         (struct-out benchmark-group)
+         mk-bgroup
+         bgroup
+         ;; options
+         (struct-out benchmark-opts)
+         bopts
+         default-opts
+         ;; for representing unset fields in options
+         nothing
+         nothing?
+         ;; time of a single trial
+         (struct-out benchmark-trial-time)
+         (struct-out shell-benchmark-trial-time)
+         ;; time of multiple trials
+         (struct-out benchmark-trial-stats)
+         (struct-out measured-value)
+         (struct-out benchmark-result)
+         bresult)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Specifying Benchmarks ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -54,27 +52,35 @@
         (lambda () b)
         (bopts #:name (format "~a" 'b)))]))
 
-(define (mk-b1 name thunk [opts (bopts)])
+;; mk-b1 : string? procedure? -> benchmark-one?
+(define (mk-b1 name thunk
+               [opts (bopts)] ;; benchmark-opts?
+               )
   (benchmark-one thunk (struct-copy benchmark-opts opts [name name])))
 
+;; m-command-or-proc : (or/c command procedure? nothing)
+
 (struct shell-benchmark benchmark-one
-  (configure
-   build
-   run
-   extract-result
-   clean
+  (configure        ;; m-command-or-proc
+   build            ;; m-command-or-proc
+   run              ;; m-command-or-proc
+   extract-result   ;; bytes? -> benchmark-trial-time?
+   clean            ;; m-command-or-proc
    )
   #:transparent
   )
 
 (struct benchmark-group
-  (benchmarks      ;; list? of benchmark-one?
+  (benchmarks      ;; (listof benchmark-one?)
    opts            ;; benchmark-opts?
    )
   #:transparent
   )
 
-(define (mk-bgroup name benchmarks [opts (bopts)])
+;; mk-bgroup : string? (listof benchmark-one?) -> benchmark-group?
+(define (mk-bgroup name benchmarks
+                   [opts (bopts)] ;; benchmark-opts?
+                   )
   (benchmark-group benchmarks (struct-copy benchmark-opts opts [name name])))
 
 (define-syntax (bgroup stx)
@@ -100,12 +106,12 @@
   )
 
 (define (bopts
-         #:name [name ""]
-         #:gc-between [gc-between nothing]
-         #:num-trials [num-trials nothing]
-         #:itrs-per-trial [itrs-per-trial nothing]
-         #:discard-first [discard-first nothing]
-         #:time-external [time-external nothing])
+         #:name [name ""]                          ;; string?
+         #:gc-between [gc-between nothing]         ;; boolean?
+         #:num-trials [num-trials nothing]         ;; exact-integer?
+         #:itrs-per-trial [itrs-per-trial nothing] ;; exact-integer?
+         #:discard-first [discard-first nothing]   ;; boolean?
+         #:time-external [time-external nothing])  ;; boolean?
   (benchmark-opts name gc-between num-trials itrs-per-trial
                   discard-first time-external))
 
@@ -133,10 +139,10 @@
   )
 
 (struct shell-benchmark-trial-time benchmark-trial-time
-  (configure-time  ;; flonum?
-   build-time      ;; flonum?
-   run-time        ;; flonum?
-   clean-time      ;; flonum?
+  (configure-time  ;; exact-integer?
+   build-time      ;; exact-integer?
+   run-time        ;; exact-integer?
+   clean-time      ;; exact-integer?
    )
   #:prefab
   )
@@ -152,12 +158,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Statistics ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (struct measured-value
-  (mean                ;; flonum?
-   samples             ;; list? (flonum?)
-   coeff-of-var        ;; flonum?
-   conf-lb             ;; flonum?
-   conf-ub             ;; flonum?
-   conf-level          ;; flonum?
+  (mean                ;; real?
+   samples             ;; real?
+   coeff-of-var        ;; real?
+   conf-lb             ;; real?
+   conf-ub             ;; real?
+   conf-level          ;; real?
    )
   #:prefab
   )
@@ -165,5 +171,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Miscellaneous ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (struct nothing-s ())
+
+;; nothing : nothing?
 (define nothing (nothing-s))
+
+;; nothing? : any/c -> boolean?
 (define nothing? nothing-s?)

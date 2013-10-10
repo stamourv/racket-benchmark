@@ -1,12 +1,10 @@
 #lang racket
 
-(require "types.rkt")
-(require "print.rkt")
+(require "print.rkt" "types.rkt")
 (require math/statistics)
 
-(provide
- raw-to-stats
- show-measured-value)
+(provide raw-to-stats
+         normalize-br)
 
 ;; assumes random errors can be modeled by a normal distribution
 ;; TODO: how do we know if our errors can be modeled by a normal distribution?
@@ -35,6 +33,7 @@
 (module+ test
   (require rackunit)
 
+  ;; testcase information
   (struct tc
     (vals
      conf-lb
@@ -44,7 +43,7 @@
      )
     #:transparent
     )
-  
+
   (define samples
     (list
      (tc (for/list ([i 30]) 0) 0 0 0 +inf.0)
@@ -53,12 +52,12 @@
      (tc (for/list ([i (in-range 50 100)]) i) 70.4594 78.5406 14.5774 .1957)
      (tc (for/list ([i 100]) i) 43.8139 55.1861 29.01149 .5861)
      ))
-  
+
   (define delta .001)
   (define (close? a b) (>= (+ delta (min a b)) (max a b)))
   (define (check-close? a b msg) (check close? a b msg)))
 
-;; list? (benchmark-trial-time?) -> benchmark-trial-stats?
+;; raw-to-stats : (listof benchmark-trial-time?) -> benchmark-trial-stats?
 (define (raw-to-stats times)
   (let ([cpu (map benchmark-trial-time-cpu times)]
         [real (map benchmark-trial-time-real times)]
@@ -67,19 +66,6 @@
                            (calculate-stats real)
                            (calculate-stats gc))))
 
-(module+ test
-  (define (test-calculate-stats)
-    (for ([s samples])
-      (let ([stats (calculate-stats (tc-vals s))])
-        (for ([i (list measured-value-coeff-of-var
-                       measured-value-conf-lb
-                       measured-value-conf-ub)]
-              [j (list tc-cov
-                       tc-conf-lb
-                       tc-conf-ub)])
-          (check-close? (j s) (i stats) "calculate stats"))
-        (check-equal? (tc-vals s) (measured-value-samples stats))))))
-
 ;; From Lilja, appendix C.1 for n = ∞ (normal distribution)
 (define default-conf-level .95)
 (define default-z 1.960)
@@ -87,10 +73,11 @@
 ;; Calculation of confidence intervals for random errors that can
 ;; be modeled by the normal distribution
 ;; for n ≥ 30, we use the normal distribution to calculate the confidence interval
-;; for n < 30, we must use the student t distribution
-;; From Lilja 4.4.1
+;; for n < 30, we must use the student t distribution, but currently
+;; issue an error
 
-;; list? (num?) num? -> (num? . num?)
+;; confidence-internal : (Sequenceof Real) Nonnegative-Real
+;;                       -> (Nonnegative-Real . Nonnegative-Real)
 (define (confidence-interval vals confidence-level)
   (let ([arith-mean (mean vals)]
         [std-dev (sample-stddev vals)]
@@ -112,7 +99,7 @@
         (check-close? (tc-conf-lb s) ci-lb "lower bound")
         (check-close? (tc-conf-ub s) ci-ub "upper bound")))))
 
-;; list? (num?) -> measured-value?
+;; calculate-stats : (SequenceOf Real) -> measured-value?
 (define (calculate-stats vals)
   (let* ([conf-level default-conf-level]
          [interval (confidence-interval vals conf-level)]
@@ -122,7 +109,20 @@
          [cov (coeff-of-variation vals)])
     (measured-value mean vals cov conf-lb conf-ub conf-level)))
 
-;; list? (num?) -> num?
+(module+ test
+  (define (test-calculate-stats)
+    (for ([s samples])
+      (let ([stats (calculate-stats (tc-vals s))])
+        (for ([i (list measured-value-coeff-of-var
+                       measured-value-conf-lb
+                       measured-value-conf-ub)]
+              [j (list tc-cov
+                       tc-conf-lb
+                       tc-conf-ub)])
+          (check-close? (j s) (i stats) "calculate stats"))
+        (check-equal? (tc-vals s) (measured-value-samples stats))))))
+
+;; coeff-of-variation : (Sequenceof Real) -> Nonnegative-Real
 (define (coeff-of-variation vals)
   (if (= 0 (mean vals))
       ;; TODO: what is the appropriate return value?
@@ -135,15 +135,47 @@
       (let ([cov (coeff-of-variation (tc-vals s))])
         (check-close? (tc-cov s) cov "coeff of var")))))
 
-;; list? (num?) -> num?
-;; stddev calculates population standard deviation, but we want sample stddev
-(define (sample-stddev vals) (stddev vals #:bias #t))
+;; sample-stddev : (Sequenceof Real) -> Nonnegative-Real
+(define (sample-stddev vals)
+  ;; bias #t calculates sample instead of population stddev
+  (stddev vals #:bias #t))
 
 (module+ test
   (define (test-sample-stddev)
     (for ([s samples])
       (let ([stddev (sample-stddev (tc-vals s))])
         (check-close? (tc-sample-stddev s) stddev "sample stddev")))))
+
+;; TODO: add tests for normalize-br
+
+;; normalize-br : benchmark-result? benchmark-result? -> benchmark-result?
+(define (normalize-br norm-br br)
+  (define (norm-val fn)
+    (define norm-mean
+      (measured-value-mean (fn (benchmark-result-trial-stats norm-br))))
+    (if (zero? norm-mean)
+        +inf.0
+        (/ 1 norm-mean)))
+  (define (samples fn)
+    (measured-value-samples (fn (benchmark-result-trial-stats br))))
+  (define norm-cpu-val (norm-val benchmark-trial-stats-cpu))
+  (define norm-real-val (norm-val benchmark-trial-stats-real))
+  (define norm-gc-val (norm-val benchmark-trial-stats-gc))
+  (define normd-cpu-samples
+    (map (lambda (s) (* s norm-cpu-val))
+         (samples benchmark-trial-stats-cpu)))
+  (define normd-real-samples
+    (map (lambda (s) (* s norm-real-val))
+         (samples benchmark-trial-stats-real)))
+  (define normd-gc-samples
+    (map (lambda (s) (* s norm-gc-val))
+         (samples benchmark-trial-stats-gc)))
+  (benchmark-result
+   (benchmark-result-opts br)
+   (raw-to-stats (map benchmark-trial-time
+                      normd-cpu-samples
+                      normd-real-samples
+                      normd-gc-samples))))
 
 (module+ test
   (test-confidence-interval)

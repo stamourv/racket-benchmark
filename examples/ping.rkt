@@ -32,7 +32,6 @@
 (define results
   (run-benchmarks
    benches
-   #:benchmark-opts
    (bopts #:gc-between #f
           #:num-trials 30
           #:discard-first #f)))

@@ -1,28 +1,25 @@
 #lang racket
 
+(require "types.rkt"
+         "stats.rkt"
+         "print.rkt"
+         "time.rkt"
+         "external.rkt"
+         "plot.rkt")
 (require math/statistics)
-(require "types.rkt")
-(require "stats.rkt")
-(require "print.rkt")
-(require "time.rkt")
-(require (for-syntax "time.rkt"))
-(require "external.rkt")
-(require "plot.rkt")
 
-(provide
- mk-b1
- b1
- mk-bgroup
- bgroup
- mk-shell-benchmark
- bopts
- run-benchmarks
- time-internal
- benchmark-trial-time
- render-benchmark-alts
- )
+(provide mk-b1
+         b1
+         mk-bgroup
+         bgroup
+         mk-shell-benchmark
+         bopts
+         run-benchmarks
+         time-internal
+         benchmark-trial-time
+         render-benchmark-alts)
 
-;; this module implements a simple benchmarking library
+;; append-opts : benchmark-opts? benchmark-opts? -> benchmark-opts?
 (define (append-opts o1 o2)
   (define (filter-nothing lst)
     (filter (lambda (x) (not (nothing? x))) lst))
@@ -46,65 +43,69 @@
         [time-external (opt-val benchmark-opts-time-external)])
     (benchmark-opts name gc trials itrs discard time-external)))
 
+;; append-default-opts : benchmark-opts? -> benchmark-opts?
 (define (append-default-opts o) (append-opts o default-opts))
 
-;; (benchmark-one? or benchmark-group?) -> list? (benchmark-result?)
-;; TODO: clean up
-(define (run-benchmarks benchmarks
-                        #:benchmark-opts [benchmark-opts nothing]
-                        #:results-file-base [results-file-base "default.bench"])
-  (define (run-benchmarks-aux bs opts)
-    ;; run a benchmark (benchmark-one? or benchmark-group?)
-    ;; from benchmark-group? bs, remembering the name and
-    ;; benchmark-options? of the bs
-    (define (run-group-elem e)
-      (run-benchmarks-aux
-       e
-       (append-opts (benchmark-group-opts bs) opts)))
-    ;; run a benchmark-one?
-    (define (run-one b)
-      (let ([final-opts
-             (append-default-opts (append-opts (benchmark-one-opts b) opts))])
-        (displayln
-         (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
-                 (benchmark-opts-name final-opts)
-                 (benchmark-opts-num-trials final-opts)
-                 (benchmark-opts-itrs-per-trial final-opts)))
-        (let* ([times
-                ;; for each trial
-                (for/list ([i (benchmark-opts-num-trials final-opts)])
-                  (begin
-                    (when (benchmark-opts-gc-between-each final-opts)
-                      (collect-garbage)
-                      (collect-garbage)
-                      (collect-garbage))
-                    (cond
-                     [(benchmark-opts-time-external final-opts)
-                      (let-values
-                          ([(_ cpu real gc)
-                            (time-apply
-                             (lambda ()
-                               (for ([j (benchmark-opts-itrs-per-trial final-opts)])
-                                 ((benchmark-one-thunk b))))
-                             '())])
-                        (benchmark-trial-time cpu real gc))]
-                     [else
-                      ((benchmark-one-thunk b))
-                      (receive-time)])))]
-               [trimmed-times
-                (if (benchmark-opts-discard-first final-opts)
-                    (cdr times)
-                    times)]
-               [stats (raw-to-stats trimmed-times)])
-          (print-times (raw-to-stats trimmed-times))
-          (bresult final-opts stats))))
-    (cond
-     [(benchmark-group? bs)
-      (append-map run-group-elem (benchmark-group-benchmarks bs))]
-     [(benchmark-one? bs) (list (run-one bs))]
-     [else
-      (error
-       (format "Invalid benchmark: expected benchmark? or benchmark-group? Got: ~a" bs))]))
-  (run-benchmarks-aux benchmarks benchmark-opts))
-
-
+;; run-benchmarks : (or/c benchmark-one? benchmark-group?)
+;;                  -> (listof benchmark-result?)
+(define (run-benchmarks bs [opts nothing])
+  ;; run a benchmark (benchmark-one? or benchmark-group?)
+  ;; from benchmark-group? bs after combining options of
+  ;; group with those optional opts
+  (define (run-group-elem e)
+    (run-benchmarks
+     e
+     (append-opts (benchmark-group-opts bs) opts)))
+  ;; run a benchmark-one?
+  (define (run-one b)
+    (let*
+        ;; compute final options, filling in with default values as needed
+        ([final-opts
+          (append-default-opts
+           (append-opts
+            (benchmark-one-opts b) opts))]
+         [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)])
+      (displayln
+       (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
+               (benchmark-opts-name final-opts)
+               (benchmark-opts-num-trials final-opts)
+               (benchmark-opts-itrs-per-trial final-opts)))
+      (let*
+          ([times
+            ;; for each trial
+            (for/list ([i (benchmark-opts-num-trials final-opts)])
+              (begin
+                (when (benchmark-opts-gc-between-each final-opts)
+                  (collect-garbage)
+                  (collect-garbage)
+                  (collect-garbage))
+                (cond
+                 ;; time external (using time-apply)
+                 [(benchmark-opts-time-external final-opts)
+                  (let-values
+                      ([(_ cpu real gc)
+                        (time-apply
+                         (thunk
+                          ;; for each iteration within a trial
+                          (for ([j (in-range 0 itrs-per-trial)])
+                            ((benchmark-one-thunk b))))
+                         '())])
+                    (benchmark-trial-time cpu real gc))]
+                 ;; benchmark will do its own timing using report-time
+                 [else ((benchmark-one-thunk b)) (receive-time)])))]
+           [trimmed-times
+            (if (benchmark-opts-discard-first final-opts)
+                (cdr times)
+                times)]
+           [stats (raw-to-stats trimmed-times)])
+        (print-times (raw-to-stats trimmed-times))
+        (bresult final-opts stats))))
+  (cond
+   [(benchmark-group? bs)
+    (append-map run-group-elem (benchmark-group-benchmarks bs))]
+   [(benchmark-one? bs) (list (run-one bs))]
+   [else
+    (raise-argument-error
+     'run-benchmarks
+     "(or/c benchmark-one? benchmark-group?)"
+     bs)]))

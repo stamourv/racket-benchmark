@@ -2,12 +2,10 @@
 
 (require "types.rkt")
 
-(provide
- print-times
- show-measured-value
- )
+(provide print-times
+         show-measured-value)
 
-;; list? (benchmark-trial-stats?) -> void
+;; print-times : benchmark-trial-stats? -> void?
 (define (print-times trial-times)
   (printf
    "cpu time: ~a real time: ~a gc time: ~a\n"
@@ -15,7 +13,7 @@
    (show-measured-value (benchmark-trial-stats-real trial-times))
    (show-measured-value (benchmark-trial-stats-gc trial-times))))
 
-;; measured-value? -> string?
+;; show-measured-value : measured-value? -> string?
 (define (show-measured-value mv)
   (format "mean: ~a, coeff-of-var: ~a"
           (exact->inexact (measured-value-mean mv))

@@ -1,4 +1,4 @@
-ALL_TESTS=fib-collatz.rkt internal-external.rkt fast-fib.rkt internal-external.rkt jit-no-jit.rkt plot.rkt slow-fib.rkt
+ALL_TESTS=$(shell ls *.rkt)
 
 .PHONY: tests
 tests:
@@ -6,7 +6,7 @@ tests:
 
 .PHONY: clean
 clean:
-	rm -rf plots benches
+	rm -f *.pdf
 
 %_test: %
 	racket $* > /dev/null

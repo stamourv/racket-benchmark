@@ -1,7 +1,6 @@
 #lang racket
 
-(require "types.rkt" (for-syntax "types.rkt"))
-(require "time.rkt")
+(require "time.rkt" "types.rkt" (for-syntax "types.rkt"))
 (require racket/system)
 
 (provide
@@ -10,7 +9,7 @@
 
 ;; command : (or/c string-no-nuls? bytes-no-nuls?)
 
-;; shell-benchmark? -> shell-benchmark-trial-time?
+;; time-shell-cmd : shell-benchmark? -> shell-benchmark-trial-time?
 (define (time-shell-cmd b)
   (let* ([out (open-output-bytes)]
          [configure-time (maybe-execute-cmd (shell-benchmark-configure b))]
@@ -31,7 +30,8 @@
      run-time
      clean-time)))
 
-;; (or/c command procedure? nothing?) -> (or/c flonum? nothing?)
+;; maybe-execute-cmd : (or/c command procedure? nothing?)
+;;                      -> (or/c real? nothing?)
 (define (maybe-execute-cmd action)
   (if (nothing? action)
       nothing
@@ -42,7 +42,8 @@
                     (system action))
           (error (format "Failed running ~a\n" action)))))))
 
-;; command -> (flonum? . benchmark-trial-time?)
+;; get-run-times : command (bytes? -> benchmark-trial-time?)
+;;                 -> (real? . benchmark-trial-time?)
 (define (get-run-times action extract-times)
   (let* ([out (open-output-bytes)]
          [run-time
@@ -54,25 +55,28 @@
                  (error (format "Failed running ~a" action))))))])
     (cons run-time (extract-times (get-output-bytes out)))))
 
-;; procedure? -> flonum?
+;; time-delta : procedure? -> real?
 (define (time-delta thunk)
   (let ([start (current-inexact-milliseconds)])
     (thunk)
     (let ([end (current-inexact-milliseconds)])
       (- end start))))
 
-;; command : (or/c string-no-nuls? bytes-no-nuls?)
+;; m-command-or-proc : (or/c command procedure? nothing)
 
+;; mk-shell-benchmark : string? m-command-or-proc -> benchmark-one?
 (define (mk-shell-benchmark
-         name                                    ;; string?
-         run                                     ;; command
-         #:configure [configure nothing]         ;; command
-         #:build [build nothing]                 ;; command
-         #:extract-result [extract-result default-extract-result] ;; ??
-         #:clean [clean nothing]                 ;; command
+         name
+         run
+         #:configure [configure nothing]         ;; m-command-or-proc
+         #:build [build nothing]                 ;; m-command-or-proc
+         #:extract-result
+         [extract-result
+          default-extract-result] ;; (bytes? -> benchmark-trial-time?)
+         #:clean [clean nothing]                 ;; m-command-or-proc
          #:opts [opts (bopts
                        #:itrs-per-trial 1
-                       #:time-external #f)]) ;; benchmark-opts?
+                       #:time-external #f)])     ;; benchmark-opts?
   (b1
    name
    (report-time (time-shell-cmd
@@ -86,7 +90,7 @@
                   clean)))
    opts))
 
-;; string? -> benchmark-trial-time?
+;; default-extract-result : bytes? -> benchmark-trial-time?
 (define (default-extract-result str)
   (let* ([m (regexp-match #rx#"cpu time: ([0-9]+) real time: ([0-9]+) gc time: ([0-9]+)" str)])
     (if (not m)
@@ -96,5 +100,6 @@
          (bytes->number (caddr m))
          (bytes->number (cadddr m))))))
 
+;; bytes? -> number?
 (define (bytes->number b)
   (string->number (bytes->string/latin-1 b)))

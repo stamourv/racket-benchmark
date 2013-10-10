@@ -1,39 +1,12 @@
 #lang racket
 
 (require "types.rkt" "util.rkt" "stats.rkt")
-
 (require plot plot/utils srfi/13)
 
 (provide render-benchmark-alts)
 
-(define (normalize-br norm-br br)
-  (define (norm-val fn)
-    (define norm-mean
-      (measured-value-mean (fn (benchmark-result-trial-stats norm-br))))
-    (if (zero? norm-mean)
-        +inf.0
-        (/ 1 norm-mean)))
-  (define (samples fn)
-    (measured-value-samples (fn (benchmark-result-trial-stats br))))
-  (define norm-cpu-val (norm-val benchmark-trial-stats-cpu))
-  (define norm-real-val (norm-val benchmark-trial-stats-real))
-  (define norm-gc-val (norm-val benchmark-trial-stats-gc))
-  (define normd-cpu-samples
-    (map (lambda (s) (* s norm-cpu-val))
-         (samples benchmark-trial-stats-cpu)))
-  (define normd-real-samples
-    (map (lambda (s) (* s norm-real-val))
-         (samples benchmark-trial-stats-real)))
-  (define normd-gc-samples
-    (map (lambda (s) (* s norm-gc-val))
-         (samples benchmark-trial-stats-gc)))
-  (benchmark-result
-   (benchmark-result-opts br)
-   (raw-to-stats (map benchmark-trial-time
-                      normd-cpu-samples
-                      normd-real-samples
-                      normd-gc-samples))))
-
+;; render-benchmark-alts : (listof string?) (listof benchmark-result?)
+;;                         string? -> renderer2d?
 (define (render-benchmark-alts alt-names brs norm-alt-name)
   (define (select-benchmarks alt-name)
     (define alt-name-pref (string-append alt-name "/"))
@@ -54,7 +27,8 @@
     (filter-map
      (lambda (br)
        (if (string-prefix? alt-name-pref (br-name br))
-           (let ([new-name (substring (br-name br) (string-length alt-name-pref))]
+           (let ([new-name
+                  (substring (br-name br) (string-length alt-name-pref))]
                  [opts (benchmark-result-opts br)]
                  [trial-stats (benchmark-result-trial-stats br)])
              (normalize-br
@@ -65,7 +39,7 @@
            #f))
      brs))
   (define num-alts (length alt-names))
-  (define alt-nums (for/list ([i num-alts]) i))
+  (define alt-nums (for/list ([i (in-range 0 num-alts)]) i))
   (define colors (color-seq "red" "green" num-alts))
   (define start-xs (linear-seq 0 (- num-alts 1) num-alts))
   (define skip (+ num-alts 1))
@@ -77,7 +51,8 @@
    colors
    start-xs))
 
-;; render the histogram of an alternative
+;; render-benchmark-alt : string? benchmark-result? plot-color/c
+;;                        rational? (>=/c 0) (>/c 0) -> (listof renderer2d?)
 (define (render-benchmark-alt alt-name brs color start-x skip bar-width
                     #:type-sel [type-sel benchmark-trial-stats-real])
   (define (data-point br)
@@ -98,11 +73,10 @@
                          conf-mean
                          conf-ht))
                           #:line-width 1)))
-  (cons   
+  (cons
    (discrete-histogram (map data-point brs)
                        #:skip skip
-                       #:label alt-name                      
+                       #:label alt-name
                        #:color color
                        #:x-min start-x)
-   (map data-error-bars brs (for/list ([i (length brs)]) i))))
-
+   (map data-error-bars brs (for/list ([i (in-range 0 (length brs))]) i))))
