@@ -26,5 +26,8 @@
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file
+   #:title "jit vs no jit"
+   #:x-label #f
+   #:y-label "normalized time"
    (render-benchmark-alts (list "jit" "no jit") results "jit")
    "jit-no-jit.pdf"))

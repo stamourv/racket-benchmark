@@ -34,5 +34,8 @@
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file
+   #:title "internal vs external timing"
+   #:x-label #f
+   #:y-label "normalized time"
    (render-benchmark-alts (list "internals" "externals") results "externals")
    "internal-external.pdf"))

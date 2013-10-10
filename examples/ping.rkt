@@ -38,6 +38,9 @@
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file
+   #:title "multiple ping trials"
+   #:y-label "normalized time"
+   #:x-label #f
    (render-benchmark-alts
     (map (lambda (n) (format "trial ~a" n))
          (for/list ([i (in-range 0 num-trials)]) i))
