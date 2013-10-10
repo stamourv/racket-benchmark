@@ -1,7 +1,7 @@
 #lang scribble/manual
 
-@(require (for-label racket))
-@(require benchmark plot racket/set scribble/eval)
+@(require (for-label racket) scribble/eval)
+
 
 @title{Benchmark}
 
@@ -20,6 +20,8 @@ An obvious question is how its performance compares to racket's implementation
 @racket[set]. For now we decide to focus our effors on the membership function.
 
 @examples[
+(require benchmark plot racket/set)
+
 (define list-sizes (list 10 100 1000))
 
 (define sample-lists
