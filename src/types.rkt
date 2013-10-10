@@ -1,7 +1,6 @@
 #lang racket
 
 (require (for-syntax syntax/parse))
-(require syntax/to-string)
 
 (provide
  nothing

@@ -23,7 +23,7 @@
   (define timeout .01)
   (let ([trial-time (sync timing-logger-receiver)])
     (discard-extra-times timeout)
-    (if (not trial-time)
+    (if (or (not trial-time) (not (benchmark-trial-time? trial-time)))
         (error (format "No log message received within ~a s, exiting." timeout))
         (vector-ref trial-time 2))))
 

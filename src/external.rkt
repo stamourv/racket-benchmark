@@ -36,21 +36,22 @@
   (if (nothing? action)
       nothing
       (time-delta
-       (if (procedure? action)
-           (action)
-           (system action)))))
+       (thunk
+        (unless (if (procedure? action)
+                    (action)
+                    (system action))
+          (error (format "Failed running ~a\n" action)))))))
 
 ;; command -> (flonum? . benchmark-trial-time?)
 (define (get-run-times action extract-times)
   (let* ([out (open-output-bytes)]
          [run-time
           (parameterize
-              ([current-output-port out]
-               [current-error-port out])
+              ([current-output-port out])
             (time-delta
-             (lambda ()
+             (thunk
                (unless (system action)
-                 (error "~a failed with output: ~a" action (get-output-bytes out))))))])
+                 (error (format "Failed running ~a" action))))))])
     (cons run-time (extract-times (get-output-bytes out)))))
 
 ;; procedure? -> flonum?
