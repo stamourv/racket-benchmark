@@ -80,27 +80,6 @@
           (check-close? (j s) (i stats) "calculate stats"))
         (check-equal? (tc-vals s) (measured-value-samples stats))))))
 
-;; currently using 'mean of differences' as described in 5.1.1 of Lilja
-;; as equal benchmark-opts implies corresponding measurements
-
-;; TODO: use ANOVA instead of mean of differences
-;; TODO: add test cases
-
-;; benchmark-result? benchmark-result? -> benchmark-comparison?
-(define (compare-benchmarks br1 br2)
-  (let* ([samples (lambda (b)
-                    (measured-value-samples
-                     (benchmark-trial-stats-real
-                      (benchmark-result-trial-stats b))))]
-         [diffs (map (lambda (x y) (- x y)) (samples br1) (samples br2))]
-         [diff-stats (calculate-stats diffs)]
-         [sig (cond [(> (measured-value-conf-lb diff-stats) 0)
-                     'sig-improvement]
-                    [(< (measured-value-conf-ub diff-stats) 0)
-                     'sig-regression]
-                    [else 'not-sig])])
-    (bcomparison sig (benchmark-result-opts br1))))
-
 ;; From Lilja, appendix C.1 for n = ∞ (normal distribution)
 (define default-conf-level .95)
 (define default-z 1.960)

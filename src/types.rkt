@@ -3,8 +3,6 @@
 (require (for-syntax syntax/parse))
 
 (provide
- nothing
- nothing?
  ;; single benchmark
  (struct-out benchmark-one)
  mk-b1
@@ -19,6 +17,9 @@
  (struct-out benchmark-opts)
  bopts
  default-opts
+ ;; for representing unset fields in options
+ nothing
+ nothing?
  ;; time of a single trial
  (struct-out benchmark-trial-time)
  (struct-out shell-benchmark-trial-time)
@@ -27,9 +28,6 @@
  (struct-out measured-value)
  (struct-out benchmark-result)
  bresult
- ;; comparison of benchmarks
- (struct-out benchmark-comparison)
- bcomparison
  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Specifying Benchmarks ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -163,15 +161,6 @@
    )
   #:prefab
   )
-
-(struct benchmark-comparison
-  (result          ;; 'sig-improvement 'sig-regression 'not-sig
-   opts            ;; benchmark-opts?
-   )
-  #:transparent
-  )
-
-(define bcomparison benchmark-comparison)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Miscellaneous ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
