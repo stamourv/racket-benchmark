@@ -1,52 +1,57 @@
 #lang racket
 
-(module typed typed/racket
-  (require racket/unsafe/ops)
-  (require/typed benchmark
-                 [time-internal ((-> Any) -> Void)])
+(require plot benchmark)
 
-    (provide complete-thunks partial-thunks names)
+(define hand-optimized-files
+  (list
+   "binarytrees.rkt"
+   "cantor.rkt"
+   "heapsort.rkt"
+   "mandelbrot.rkt"
+   "moments.rkt"
+   "nbody.rkt"))
 
-    (define n 1000000)
-    (define m 10000)
-    (define l (make-list 10000 "a"))
-    (define l2 (build-list 1000000 (lambda: ([x : Integer]) x)))
+(define all-files
+  (append hand-optimized-files
+          (list "maze.rkt"
+                "ray-tracer.rkt"
+                "pseudoknot.rkt"
+                "video.rkt")))
 
-    (define names
-      (list "unsafe-fx+ int" "format int" "format list" "unsafe-fx+ list"))
+(define optimization-type-files
+  (list (cons "orig" all-files)
+        (cons "coached" all-files)
+        (cons "hand-opt" hand-optimized-files)))
 
-    (define complete-thunks
-      (list
-       (thunk (time-internal (thunk (for ([i (in-range n)]) (unsafe-fx+ i 1)))))
-       (thunk (time-internal (thunk (for ([i (in-range m)]) (format "eh~a" i)))))
-       (thunk (time-internal (thunk (for ([i (in-list l)]) (format "eh~a" i)))))
-       (thunk (time-internal (thunk (for ([i (in-list l2)]) (unsafe-fx+ i 1)))))))
+(define (mk-optimization-group opt-type files)
+  (bgroup
+   opt-type
+   (map
+    (lambda (f)
+      (let ([f-path (format "oc-external/~a/~a" opt-type f)])
+        (mk-shell-benchmark
+         f
+         (format "racket ~a" f-path)
+         #:configure (format "raco make ~a" f-path))))
+    files)))
 
-    (define partial-thunks
-      (list
-       (thunk (time-internal (thunk (for ([i n]) (unsafe-fx+ i 1)))))
-       (thunk (time-internal (thunk (for ([i m]) (format "eh~a" i)))))
-       (thunk (time-internal (thunk (for ([i l]) (format "eh~a" i)))))
-       (thunk (time-internal (thunk (for ([i l2]) (unsafe-fx+ i 1))))))))
-
-(require (submod "." typed) benchmark plot)
-
-(define benches
-  (mk-bgroup
+(define benchmarks
+  (bgroup
    ""
-   (list
-    (mk-bgroup "partial" (map mk-b1 names partial-thunks))
-    (mk-bgroup "complete" (map mk-b1 names complete-thunks)))))
+   (map
+    (lambda (otfs)
+      (mk-optimization-group (car otfs) (cdr otfs)))
+    optimization-type-files)))
 
 (define results
-  (run-benchmarks
-   benches
-   (bopts #:gc-between #f #:num-trials 31 #:itrs-per-trial 10)))
+  (run-benchmarks benchmarks (bopts #:num-trials 5 #:discard-first #f)))
 
-(parameterize ([plot-x-ticks no-ticks])
+(parameterize ([plot-x-ticks no-ticks]
+               [plot-x-tick-label-anchor 'top-right]
+               [plot-x-tick-label-angle 30])
   (plot-file
    #:title "optimization coach"
-   #:y-label "normalized time"
    #:x-label #f
-   (render-benchmark-alts (list "complete" "partial") results "partial")
+   #:y-label "normalized time"
+   (render-benchmark-alts (map car optimization-type-files) results "orig")
    "optimization-coach.pdf"))
