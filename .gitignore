@@ -1,2 +1,11 @@
 *~
+*#
+.#*
 compiled/
+oc-external
+doc/
+*.css
+*.js
+*.pdf
+*.html
+*.png
