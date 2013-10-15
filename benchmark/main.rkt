@@ -5,7 +5,8 @@
          "print.rkt"
          "time.rkt"
          "external.rkt"
-         "plot.rkt")
+         "plot.rkt"
+         "results.rkt")
 (require math/statistics)
 
 (provide mk-b1
@@ -17,7 +18,9 @@
          run-benchmarks
          time-internal
          benchmark-trial-time
-         render-benchmark-alts)
+         render-benchmark-alts
+         get-past-results
+         record-results)
 
 ;; append-opts : benchmark-opts? benchmark-opts? -> benchmark-opts?
 (define (append-opts o1 o2)

@@ -2,7 +2,8 @@
 *#
 .#*
 compiled/
-oc-external
+oc-external/
+benches/
 doc/
 *.css
 *.js
