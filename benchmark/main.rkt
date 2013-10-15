@@ -18,7 +18,7 @@
          run-benchmarks
          time-internal
          benchmark-trial-time
-         render-benchmark-alts
+         (all-from-out "plot.rkt")
          get-past-results
          record-results)
 
