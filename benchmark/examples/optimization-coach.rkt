@@ -44,7 +44,7 @@
     optimization-type-files)))
 
 (define results
-  (run-benchmarks benchmarks (bopts #:num-trials 5 #:discard-first #f)))
+  (run-benchmarks benchmarks (bopts #:num-trials 30 #:discard-first #f)))
 
 (parameterize ([plot-x-ticks no-ticks]
                [plot-x-tick-label-anchor 'top-right]
