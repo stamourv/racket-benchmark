@@ -47,15 +47,17 @@
 ;; render-benchmark-alts : (listof string?) (listof benchmark-result?)
 ;;                         string? -> renderer2d?
 (define (render-benchmark-alts alt-names brs norm-alt-name)
-  (define (select-benchmarks alt-name)
-    (define alt-name-pref (string-append alt-name "/"))
-    (define (br-name br)
-      (benchmark-opts-name (benchmark-result-opts br)))
+  (define (br-name br)
+    (benchmark-opts-name (benchmark-result-opts br)))
+  ;; for comparing groups of benchmarks
+  (define (select-benchmarks-group alt-name)
     (define (norm-list br-suff)
-      (filter (lambda (br) (equal?
-                            (br-name br)
-                            (string-append norm-alt-name "/" br-suff)))
+      (filter (lambda (br)
+                (equal?
+                 (br-name br)
+                 (string-append norm-alt-name "/" br-suff)))
               brs))
+    (define alt-name-pref (string-append alt-name "/"))
     (define (norm-br br-suff)
       (define nl (norm-list br-suff))
       (define norm-br-name (string-append norm-alt-name "/" br-suff))
@@ -78,6 +80,30 @@
                trial-stats)))
            #f))
      brs))
+  ;; for comparing individual benchmarks
+  (define (select-benchmarks-individual alt-name)
+    (define (norm-br)
+      (define nl
+        (filter (lambda (br)
+                  (equal? norm-alt-name (br-name br)))
+                brs))
+      (cond [(null? nl)
+             (error (format "Benchmark ~a not found" norm-alt-name))]
+            [(> 1 (length nl))
+             (error (format "Duplicate ~a found" norm-alt-name))]
+            [else (car nl)]))
+    (filter-map
+          (lambda (br)
+            (if (equal? (br-name br) alt-name)
+                (normalize-br (norm-br) br)
+                #f))
+          brs))
+  ;; if the norm-alt-name is an actual benchmark anem, we are comparing
+  ;; individual benchmarks. otherwise, we are comparing groups
+  (define select-benchmarks
+    (if (ormap (lambda (br) (equal? (br-name br) norm-alt-name)) brs)
+        select-benchmarks-individual
+        select-benchmarks-group))
   (define num-alts (length alt-names))
   (define alt-nums (for/list ([i (in-range 0 num-alts)]) i))
   (define colors
