@@ -10,7 +10,8 @@
          black-white-color-scheme-short
          black-white-color-scheme-medium-1
          black-white-color-scheme-medium-2
-         black-white-color-scheme-long)
+         black-white-color-scheme-long
+         benchmark-show-legend?)
 
 ;; TODO document those
 (define bright-color-scheme
@@ -39,6 +40,8 @@
           fdiagonal-hatch solid vertical-hatch)))
 
 (define current-benchmark-color-scheme (make-parameter pastel-color-scheme))
+
+(define benchmark-show-legend? (make-parameter #t))
 
 
 ;; render-benchmark-alts : (listof string?) (listof benchmark-result?)
@@ -119,10 +122,18 @@
                          conf-ht))
                           #:line-width 1)))
   (cons
-   (discrete-histogram (map data-point brs)
+   (if (benchmark-show-legend?)
+       (discrete-histogram (map data-point brs)
                        #:skip skip
                        #:label alt-name
                        #:color color
                        #:style style
                        #:x-min start-x)
+       (discrete-histogram (map data-point brs)
+                       #:skip skip
+                       ;; no labels, that disables the legend
+                       #:color color
+                       #:style style
+                       #:x-min start-x))
+   
    (map data-error-bars brs (for/list ([i (in-range 0 (length brs))]) i))))
