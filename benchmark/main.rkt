@@ -67,7 +67,11 @@
           (append-default-opts
            (append-opts
             (benchmark-one-opts b) opts))]
-         [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)])
+         [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)]
+         [adjusted-num-trials
+          (if (benchmark-opts-discard-first final-opts)
+              (+ 1 (benchmark-opts-num-trials final-opts))
+              (benchmark-opts-num-trials final-opts))])
       (displayln
        (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
                (benchmark-opts-name final-opts)
@@ -76,7 +80,7 @@
       (let*
           ([times
             ;; for each trial
-            (for/list ([i (benchmark-opts-num-trials final-opts)])
+            (for/list ([i adjusted-num-trials])
               (begin
                 (when (benchmark-opts-gc-between-each final-opts)
                   (collect-garbage)

@@ -3,7 +3,7 @@ ALL_TESTS=$(shell ls *.rkt)
 
 .PHONY: tests
 tests: optimization-coach
-	@make -k $(foreach t,$(ALL_TESTS), $(t)_test)
+	make -k $(foreach t,$(ALL_TESTS), $(t)_test)
 
 .PHONY: clean
 clean:
@@ -12,5 +12,6 @@ clean:
 %_test: %
 	racket $* > /dev/null
 
+.PHONY: optimization-coach
 optimization-coach:
 	cd optimization-coach ; racket run.rkt ; racket plot.rkt

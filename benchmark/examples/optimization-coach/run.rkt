@@ -23,5 +23,5 @@
     optimization-type-files)))
 
 (record-results
- (run-benchmarks benchmarks (mk-bench-opts #:num-trials 30 #:discard-first #f))
+ (run-benchmarks benchmarks (mk-bench-opts #:num-trials 30))
  results-file)
