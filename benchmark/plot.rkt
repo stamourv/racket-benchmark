@@ -119,8 +119,7 @@
       (error-bars (list (vector
                          (+ start-x (* skip i) delta-to-mid-bar)
                          conf-mean
-                         conf-ht))
-                          #:line-width 1)))
+                         conf-ht)))))
   (cons
    (if (benchmark-show-legend?)
        (discrete-histogram (map data-point brs)
