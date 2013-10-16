@@ -1,8 +1,10 @@
 #lang racket
 
+(require racket/runtime-path)
+
 (provide results-file optimization-type-files)
 
-(define results-file "optimization-coach.bench")
+(define-runtime-path results-file "benches/optimization-coach.bench")
 
 (define hand-optimized-files
   (list
