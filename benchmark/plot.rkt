@@ -1,6 +1,6 @@
 #lang racket
 
-(require "types.rkt" "util.rkt" "stats.rkt")
+(require "types.rkt" "stats.rkt")
 (require plot plot/utils srfi/13)
 
 (provide render-benchmark-alts

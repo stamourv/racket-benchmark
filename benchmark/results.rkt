@@ -1,7 +1,5 @@
 #lang racket
 
-(require "util.rkt")
-
 (provide get-past-results
          record-results)
 
