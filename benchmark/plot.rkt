@@ -58,10 +58,11 @@
               brs))
     (define (norm-br br-suff)
       (define nl (norm-list br-suff))
+      (define norm-br-name (string-append norm-alt-name "/" br-suff))
       (cond [(null? nl)
-             (error (format "Benchmark ~a not found" norm-alt-name))]
+             (error (format "Benchmark ~a not found" norm-br-name))]
             [(> 1 (length nl))
-             (error (format "Duplicate ~a found" norm-alt-name))]
+             (error (format "Duplicate ~a found" norm-br-name))]
             [else (car nl)]))
     (filter-map
      (lambda (br)
