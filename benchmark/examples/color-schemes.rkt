@@ -3,23 +3,23 @@
 (require plot benchmark)
 
 (define benches
-  (bgroup   
+  (bench-group   
    ""
    (list
-    (bgroup "A" (list (b1 "1" (sleep 0.01))))
-    (bgroup "B" (list (b1 "1" (sleep 0.01))))
-    (bgroup "C" (list (b1 "1" (sleep 0.01))))
-    (bgroup "D" (list (b1 "1" (sleep 0.01))))
-    (bgroup "E" (list (b1 "1" (sleep 0.01))))
-    (bgroup "F" (list (b1 "1" (sleep 0.01))))
-    (bgroup "G" (list (b1 "1" (sleep 0.01))))
-    (bgroup "H" (list (b1 "1" (sleep 0.01))))
+    (bench-group "A" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "B" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "C" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "D" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "E" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "F" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "G" (list (bench-one "1" (sleep 0.01))))
+    (bench-group "H" (list (bench-one "1" (sleep 0.01))))
     )))
 
 (define results
   (run-benchmarks
    benches
-   (bopts
+   (mk-bench-opts
     #:gc-between #f
     #:itrs-per-trial 10
     #:num-trials 31)))

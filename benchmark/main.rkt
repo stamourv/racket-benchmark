@@ -9,12 +9,12 @@
          "results.rkt")
 (require math/statistics)
 
-(provide mk-b1
-         b1
-         mk-bgroup
-         bgroup
+(provide mk-bench-one
+         bench-one
          mk-shell-benchmark
-         bopts
+         mk-bench-group
+         bench-group
+         mk-bench-opts
          run-benchmarks
          time-internal
          benchmark-trial-time
@@ -102,7 +102,7 @@
                 times)]
            [stats (raw-to-stats trimmed-times)])
         (print-times (raw-to-stats trimmed-times))
-        (bresult final-opts stats))))
+        (mk-bench-result final-opts stats))))
   (cond
    [(benchmark-group? bs)
     (append-map run-group-elem (benchmark-group-benchmarks bs))]

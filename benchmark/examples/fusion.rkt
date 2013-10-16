@@ -21,24 +21,24 @@
     [(_ l) #'(map add1 (map square (map sqrt l)))]))
 
 (define benches
-  (mk-bgroup
+  (mk-bench-group
    ""
    (list
-    (mk-bgroup
+    (mk-bench-group
      "fusion"
      (map
-      (lambda (n l) (mk-b1 n (thunk (fuse l))))
+      (lambda (n l) (mk-bench-one n (thunk (fuse l))))
       list-sizes-strs sample-lists))
-    (mk-bgroup
+    (mk-bench-group
      "no-fusion"
      (map
-      (lambda (n l) (mk-b1 n (thunk (no-fuse l))))
+      (lambda (n l) (mk-bench-one n (thunk (no-fuse l))))
       list-sizes-strs sample-lists)))))
 
 (define results
   (run-benchmarks
    benches
-   (bopts #:gc-between #f #:itrs-per-trial 200 #:num-trials 50)))
+   (mk-bench-opts #:gc-between #f #:itrs-per-trial 200 #:num-trials 50)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

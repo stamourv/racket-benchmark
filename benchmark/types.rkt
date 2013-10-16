@@ -4,17 +4,17 @@
 
 (provide ;; single benchmark
          (struct-out benchmark-one)
-         mk-b1
-         b1
+         mk-bench-one
+         bench-one
          ;; shell benchmarks
          (struct-out shell-benchmark)
          ;; grouping benchmarks together by name
          (struct-out benchmark-group)
-         mk-bgroup
-         bgroup
+         mk-bench-group
+         bench-group
          ;; options
          (struct-out benchmark-opts)
-         bopts
+         mk-bench-opts
          default-opts
          ;; for representing unset fields in options
          nothing
@@ -26,7 +26,7 @@
          (struct-out benchmark-trial-stats)
          (struct-out measured-value)
          (struct-out benchmark-result)
-         bresult)
+         mk-bench-result)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Specifying Benchmarks ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -37,7 +37,7 @@
   #:transparent
   )
 
-(define-syntax (b1 stx)
+(define-syntax (bench-one stx)
   (syntax-parse stx
     [(_ n:expr b:expr opts:expr)
      #'(benchmark-one (lambda () b)
@@ -46,15 +46,15 @@
                        opts
                        [name n]))]
     [(_ n:expr b:expr)
-     #'(benchmark-one (lambda () b) (bopts #:name n))]
+     #'(benchmark-one (lambda () b) (mk-bench-opts #:name n))]
     [(_ b:expr)
      #'(benchmark-one
         (lambda () b)
-        (bopts #:name (format "~a" 'b)))]))
+        (mk-bench-opts #:name (format "~a" 'b)))]))
 
-;; mk-b1 : string? procedure? -> benchmark-one?
-(define (mk-b1 name thunk
-               [opts (bopts)] ;; benchmark-opts?
+;; mk-bench-one : string? procedure? -> benchmark-one?
+(define (mk-bench-one name thunk
+               [opts (mk-bench-opts)] ;; benchmark-opts?
                )
   (benchmark-one thunk (struct-copy benchmark-opts opts [name name])))
 
@@ -77,13 +77,13 @@
   #:transparent
   )
 
-;; mk-bgroup : string? (listof benchmark-one?) -> benchmark-group?
-(define (mk-bgroup name benchmarks
-                   [opts (bopts)] ;; benchmark-opts?
+;; mk-bench-group : string? (listof benchmark-one?) -> benchmark-group?
+(define (mk-bench-group name benchmarks
+                   [opts (mk-bench-opts)] ;; benchmark-opts?
                    )
   (benchmark-group benchmarks (struct-copy benchmark-opts opts [name name])))
 
-(define-syntax (bgroup stx)
+(define-syntax (bench-group stx)
   (syntax-parse stx
     [(_ n:expr bs:expr opts:expr)
      #'(benchmark-group bs
@@ -92,7 +92,7 @@
                          opts
                          [name n]))]
     [(_ n:expr bs:expr)
-     #'(benchmark-group bs (bopts #:name n))]))
+     #'(benchmark-group bs (mk-bench-opts #:name n))]))
 
 (struct benchmark-opts
   (name            ;; string?
@@ -105,7 +105,7 @@
   #:prefab
   )
 
-(define (bopts
+(define (mk-bench-opts
          #:name [name ""]                          ;; string?
          #:gc-between [gc-between nothing]         ;; boolean?
          #:num-trials [num-trials nothing]         ;; exact-integer?
@@ -126,7 +126,7 @@
   #:prefab
   )
 
-(define bresult benchmark-result)
+(define mk-bench-result benchmark-result)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Times ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

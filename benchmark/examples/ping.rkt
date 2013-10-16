@@ -22,16 +22,16 @@
   (string->number (bytes->string/latin-1 b)))
 
 (define benches
-  (bgroup
+  (bench-group
    ""
    (map
-    (lambda (n) (mk-bgroup (format "trial ~a" n) (list (ping 2))))
+    (lambda (n) (mk-bench-group (format "trial ~a" n) (list (ping 2))))
     (for/list ([i (in-range 0 num-trials)]) i))))
 
 (define results
   (run-benchmarks
    benches
-   (bopts #:gc-between #f
+   (mk-bench-opts #:gc-between #f
           #:num-trials 30
           #:discard-first #f)))
 

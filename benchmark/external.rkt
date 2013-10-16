@@ -74,10 +74,10 @@
          [extract-result
           default-extract-result] ;; (bytes? -> benchmark-trial-time?)
          #:clean [clean nothing]                 ;; m-command-or-proc
-         #:opts [opts (bopts
+         #:opts [opts (mk-bench-opts
                        #:itrs-per-trial 1
                        #:time-external #f)])     ;; benchmark-opts?
-  (b1
+  (bench-one
    name
    (report-time (time-shell-cmd
                  (shell-benchmark

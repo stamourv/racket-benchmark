@@ -9,7 +9,7 @@
    "external/collatz1000.rkt"))
 
 (define (jit-no-jit jit)
-  (bgroup
+  (bench-group
    (if jit "jit" "no jit")
    (map (lambda (f)
           (mk-shell-benchmark
@@ -19,8 +19,8 @@
 
 (define results
   (run-benchmarks
-   (mk-bgroup "" (list (jit-no-jit #t) (jit-no-jit #f)))
-   (bopts #:num-trials 31)))
+   (mk-bench-group "" (list (jit-no-jit #t) (jit-no-jit #f)))
+   (mk-bench-opts #:num-trials 31)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

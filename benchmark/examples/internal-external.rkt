@@ -10,26 +10,26 @@
   (time-internal do-fib))
 
 (define (mk-fib-bench n fn)
-  (b1 (format "fib ~a" n) (fn n)))
+  (bench-one (format "fib ~a" n) (fn n)))
 
 (define fib-inputs (list 19 20 21))
 
 (define fib-internal-group
-  (mk-bgroup
+  (mk-bench-group
    "internals"
    (map (lambda (n) (mk-fib-bench n fib-internal)) fib-inputs)
-   (bopts #:time-external #f)))
+   (mk-bench-opts #:time-external #f)))
 
 (define fib-external-group
-  (mk-bgroup
+  (mk-bench-group
    "externals"
    (map (lambda (m) (mk-fib-bench m fib)) fib-inputs)))
 
 (define results
   (run-benchmarks
-   (mk-bgroup ""
+   (mk-bench-group ""
     (list fib-internal-group fib-external-group)
-    (bopts #:gc-between #f)))) 
+    (mk-bench-opts #:gc-between #f)))) 
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

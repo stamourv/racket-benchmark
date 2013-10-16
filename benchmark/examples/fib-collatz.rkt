@@ -4,10 +4,10 @@
 
 (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
 (define fib-group
-  (bgroup"fibs" (list (b1 (fib 1))
-                      (b1 (fib 2))
-                      (b1 (fib 20))
-                      (b1 (fib 21)))))
+  (bench-group"fibs" (list (bench-one (fib 1))
+                      (bench-one (fib 2))
+                      (bench-one (fib 20))
+                      (bench-one (fib 21)))))
 
 (define (collatz n)
   (if (even? n)
@@ -19,12 +19,12 @@
             (stream->list (in-range 0 m))))
 
 (define collatz-group
-  (bgroup "collatz" (list (b1 (collatz-range 1000))
-                          (b1 (collatz-range 2000)))))
+  (bench-group "collatz" (list (bench-one (collatz-range 1000))
+                          (bench-one (collatz-range 2000)))))
 
 (define collatz-and-fib
-  (bgroup ""
+  (bench-group ""
           (list fib-group collatz-group)
-          (bopts #:gc-between #f)))
+          (mk-bench-opts #:gc-between #f)))
 
 (run-benchmarks collatz-and-fib)

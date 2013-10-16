@@ -32,16 +32,16 @@
 (require (submod "." typed) benchmark plot)
 
 (define benches
-  (mk-bgroup
+  (mk-bench-group
    ""
    (list
-    (mk-bgroup "partial" (map mk-b1 names partial-thunks))
-    (mk-bgroup "complete" (map mk-b1 names complete-thunks)))))
+    (mk-bench-group "partial" (map mk-bench-one names partial-thunks))
+    (mk-bench-group "complete" (map mk-bench-one names complete-thunks)))))
 
 (define results
   (run-benchmarks
    benches
-   (bopts #:gc-between #f #:num-trials 31 #:itrs-per-trial 10)))
+   (mk-bench-opts #:gc-between #f #:num-trials 31 #:itrs-per-trial 10)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

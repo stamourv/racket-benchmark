@@ -3,7 +3,7 @@
 (require benchmark "common.rkt")
 
 (define (mk-optimization-group opt-type files)
-  (bgroup
+  (bench-group
    opt-type
    (map
     (lambda (f)
@@ -15,7 +15,7 @@
     files)))
 
 (define benchmarks
-  (bgroup
+  (bench-group
    ""
    (map
     (lambda (otfs)
@@ -23,5 +23,5 @@
     optimization-type-files)))
 
 (record-results
- (run-benchmarks benchmarks (bopts #:num-trials 30 #:discard-first #f))
+ (run-benchmarks benchmarks (mk-bench-opts #:num-trials 30 #:discard-first #f))
  results-file)
