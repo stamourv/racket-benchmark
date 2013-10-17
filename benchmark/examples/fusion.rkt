@@ -45,5 +45,5 @@
    #:title "map fusion"
    #:x-label "list size"
    #:y-label "normalized time"
-   (render-benchmark-alts (list "fusion" "no-fusion") results "fusion")
+   (render-benchmark-alts (list "fusion" "no-fusion") "fusion" results)
    "fusion-no-fusion.pdf"))

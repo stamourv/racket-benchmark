@@ -44,9 +44,9 @@
 (define benchmark-show-legend? (make-parameter #t))
 
 
-;; render-benchmark-alts : (listof string?) (listof benchmark-result?)
-;;                         string? -> renderer2d?
-(define (render-benchmark-alts alt-names brs norm-alt-name)
+;; render-benchmark-alts : (listof string?) string? (listof benchmark-result?)
+;;                         -> renderer2d?
+(define (render-benchmark-alts alt-names norm-alt-name brs)
   (define (br-name br)
     (benchmark-opts-name (benchmark-result-opts br)))
   ;; for comparing groups of benchmarks

@@ -36,5 +36,5 @@
    #:title "internal vs external timing"
    #:x-label #f
    #:y-label "normalized time"
-   (render-benchmark-alts (list "internals" "externals") results "externals")
+   (render-benchmark-alts (list "internals" "externals") "externals" results)
    "internal-external.pdf"))

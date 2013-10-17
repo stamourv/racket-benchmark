@@ -26,6 +26,6 @@
    (render-benchmark-alts
     (map (lambda (i) (format "fibs/fib ~a" i))
          (list 18 19 20 21 22))
-    results
-    "fibs/fib 18")
+    "fibs/fib 18"
+    results)
    "fibonacci.pdf"))

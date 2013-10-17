@@ -1,4 +1,4 @@
-#lang racket
+:#lang racket
 
 (require plot benchmark "common.rkt")
 
@@ -12,5 +12,5 @@
    #:title "optimization coach"
    #:x-label #f
    #:y-label "normalized time"
-   (render-benchmark-alts (map car optimization-type-files) results "orig")
+   (render-benchmark-alts (map car optimization-type-files) "orig" results)
    "optimization-coach.pdf"))

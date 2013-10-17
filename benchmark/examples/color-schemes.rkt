@@ -32,6 +32,6 @@
    #:x-label #f
    (render-benchmark-alts
     (list "A" "B" "C" "D" "E" "F" "G" "H")
-    results
-    "A")
+    "A"
+    results)
    "color-schemes.pdf"))

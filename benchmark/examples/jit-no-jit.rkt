@@ -27,5 +27,5 @@
    #:title "jit vs no jit"
    #:x-label #f
    #:y-label "normalized time"
-   (render-benchmark-alts (list "jit" "no jit") results "jit")
+   (render-benchmark-alts (list "jit" "no jit") "jit" results)
    "jit-no-jit.pdf"))

@@ -43,5 +43,6 @@
    (render-benchmark-alts
     (map (lambda (n) (format "trial ~a" n))
          (for/list ([i (in-range 0 num-trials)]) i))
-    results "trial 0")
+    "trial 0"
+    results)
    "ping.pdf"))

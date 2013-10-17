@@ -48,5 +48,5 @@
    #:title "optimization coach"
    #:y-label "normalized time"
    #:x-label #f
-   (render-benchmark-alts (list "complete" "partial") results "partial")
+   (render-benchmark-alts (list "complete" "partial") "partial" results)
    "optimization-coach-simple.pdf"))
