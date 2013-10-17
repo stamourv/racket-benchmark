@@ -20,7 +20,11 @@
          benchmark-trial-time
          (all-from-out "plot.rkt")
          get-past-results
-         record-results)
+         record-results
+         (struct-out bench-results)
+         (struct-out linux-bench-results)
+         attach-linux-info
+         attach-time)
 
 ;; append-opts : benchmark-opts? benchmark-opts? -> benchmark-opts?
 (define (append-opts o1 o2)

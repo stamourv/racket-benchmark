@@ -26,6 +26,8 @@
          (struct-out benchmark-trial-stats)
          (struct-out measured-value)
          (struct-out benchmark-result)
+         ;; for persistent results
+         (struct-out bench-results)
          mk-bench-result)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Specifying Benchmarks ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -127,6 +129,13 @@
   )
 
 (define mk-bench-result benchmark-result)
+
+(struct bench-results
+  (results    ;; (listof benchmark-result?)
+   time/date  ;; date*
+   )
+  #:prefab
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Times ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

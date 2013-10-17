@@ -1,16 +1,24 @@
 #lang racket
 
+(require racket/date racket/serialize "types.rkt")
+
 (provide get-past-results
-         record-results)
+         record-results
+         (struct-out linux-bench-results)
+         attach-linux-info
+         attach-time)
 
-;; path? exact-integer? -> (listof benchmark-result?)
+;; path? exact-integer? -> bench-results?
 (define (get-past-results file [version #f])
-  (file->value (get-file file version) #:mode 'text))
+  (deserialize (file->value (get-file file version) #:mode 'text)))
 
-;; (listof benchmark-result?) path? -> void?
+;; bench-results? path? -> void?
 (define (record-results results file)
   (let ([fresh-name (mk-fresh-file-name file)])
-    (write-to-file results fresh-name #:mode 'text #:exists 'truncate)
+    ;; serialization is used as otherwise read (write date) /= date
+    ;; in the equal? sense
+    (write-to-file (serialize results)
+                   fresh-name #:mode 'text #:exists 'truncate)
     (displayln (format "Wrote results to ~a" fresh-name))))
 
 ;; string? (or/c exact-integer? #f) -> string?
@@ -49,3 +57,28 @@
 ;; format a file name given the file-base and version
 (define (fmt file-base version)
   (format "~a-~a" file-base version))
+
+;; (listof benchmark-result?) -> bench-results?
+(define (attach-time brs) (bench-results brs (current-date)))
+
+;; (listof benchmark-result?) -> linux-bench-results?
+(define (attach-linux-info brs)
+  (linux-bench-results
+   brs
+   (current-date)
+   (system-out "hostname")
+   (system-out "uname -a")))
+
+(struct linux-bench-results
+  bench-results
+  (hostname  ;; string?
+   uname     ;; string?
+   )
+  #:prefab
+  )
+
+(define (system-out cmd)
+  (define out (open-output-bytes))
+  (parameterize ([current-output-port out])
+    (system cmd)
+    (get-output-string out)))
