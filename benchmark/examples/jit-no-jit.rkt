@@ -13,7 +13,7 @@
    (if jit "jit" "no jit")
    (map (lambda (f)
           (mk-shell-benchmark
-           f
+           (cadr (regexp-match #rx"([^.]+)\\.rkt" f))
            (format (if jit "racket ~a" "racket -j ~a") f)))
     files)))
 
@@ -22,10 +22,13 @@
    (mk-bench-group "" (list (jit-no-jit #t) (jit-no-jit #f)))
    (mk-bench-opts #:num-trials 31)))
 
+(record-results results "jit-no-jit.bench")
+
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file
    #:title "jit vs no jit"
    #:x-label #f
    #:y-label "normalized time"
-   (render-benchmark-alts (list "jit" "no jit") "jit" results)
+   (render-benchmark-alts (list "jit" "no jit") "jit"
+                          (get-past-results "jit-no-jit.bench"))
    "jit-no-jit.pdf"))
