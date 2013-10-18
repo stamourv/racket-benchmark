@@ -4,7 +4,12 @@
 (require math/statistics)
 
 (provide raw-to-stats
-         normalize-br)
+         normalize-br
+         min-samples)
+
+;; minimum number of samples needed to calculate confidence intervals
+;; paramter to allow overriding by user during debugging
+(define min-samples (make-parameter 30))
 
 ;; assumes random errors can be modeled by a normal distribution
 ;; TODO: how do we know if our errors can be modeled by a normal distribution?
@@ -85,8 +90,9 @@
         [z (if (equal? confidence-level default-conf-level)
                default-z
                (error (format "confidence level ≠ ~a" default-conf-level)))])
-    (if (< n 30)
-        (error (format "number of samples (~a) must be ≥ 30" n))
+    (if (< n (min-samples))
+        (error
+         (format "number of samples (~a) must be ≥ ~a. Configurable with min-samples parameter" n (min-samples)))
         (cons (- arith-mean (* z (/ std-dev (sqrt n))))
               (+ arith-mean (* z (/ std-dev (sqrt n))))))))
 
@@ -149,6 +155,7 @@
 ;; TODO: add tests for normalize-br
 
 ;; normalize-br : benchmark-result? benchmark-result? -> benchmark-result?
+;; normalize sample values against mean of norm-br
 (define (normalize-br norm-br br)
   (define (norm-val fn)
     (define norm-mean

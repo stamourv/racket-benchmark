@@ -24,7 +24,8 @@
          (struct-out bench-results)
          (struct-out linux-bench-results)
          attach-linux-info
-         attach-time)
+         attach-time
+         min-samples)
 
 ;; append-opts : benchmark-opts? benchmark-opts? -> benchmark-opts?
 (define (append-opts o1 o2)
