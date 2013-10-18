@@ -11,7 +11,8 @@
 
 (provide mk-bench-one
          bench-one
-         mk-shell-benchmark
+         mk-shell-bench
+         mk-racket-file-bench
          mk-bench-group
          bench-group
          mk-bench-opts

@@ -5,7 +5,7 @@
 (define num-trials 5)
 
 (define (ping count)
-  (mk-shell-benchmark
+  (mk-shell-bench
    "ping"
    (format "ping -c ~a ccs.neu.edu" count)
    #:extract-result extract-time))

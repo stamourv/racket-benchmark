@@ -8,7 +8,7 @@
    (map
     (lambda (f)
       (let ([f-path (format "oc-external/~a/~a" opt-type f)])
-        (mk-shell-benchmark
+        (mk-shell-bench
          f
          (format "racket ~a" f-path)
          #:configure (format "raco make ~a" f-path))))

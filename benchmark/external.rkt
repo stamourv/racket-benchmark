@@ -4,7 +4,8 @@
 (require racket/system)
 
 (provide
- mk-shell-benchmark
+ mk-shell-bench
+ mk-racket-file-bench
  time-shell-cmd)
 
 ;; command : (or/c string-no-nuls? bytes-no-nuls?)
@@ -64,8 +65,8 @@
 
 ;; m-command-or-proc : (or/c command procedure? nothing)
 
-;; mk-shell-benchmark : string? m-command-or-proc -> benchmark-one?
-(define (mk-shell-benchmark
+;; mk-shell-bench : string? m-command-or-proc -> benchmark-one?
+(define (mk-shell-bench
          name
          run
          #:configure [configure nothing]         ;; m-command-or-proc
@@ -89,6 +90,37 @@
                   extract-result
                   clean)))
    opts))
+
+;; mk-racket-file-bench : string? string? (listof string?) -> benchmark-one?
+(define (mk-racket-file-bench
+         name
+         fname
+         args
+         #:configure [configure nothing]               ;; m-comand-or-proc
+         #:build [build (format "raco make ~a" fname)] ;; m-command-or-proc
+         #:extract-result
+         [extract-result
+          default-extract-result]             ;; (bytes-> benchmark-trial-time?)
+         #:clean [clean nothing]              ;; m-command-or-proc
+         #:opts [opts (mk-bench-opts
+                       #:itrs-per-trial 1
+                       #:time-external #f)])  ;; benchmark-opts?
+  (mk-shell-bench
+   name
+   (intercalate-strings (cons "racket" (append args (list fname))) " ")
+   #:configure configure
+   #:build build
+   #:extract-result extract-result
+   #:clean clean
+   #:opts opts))
+
+(define (intercalate-strings lst val)
+  (apply string-append (intersperse lst val)))
+
+(define (intersperse lst val)
+  (if (null? lst)
+      (list)
+      (cons (car lst) (cons val (intersperse (cdr lst) val)))))
 
 ;; default-extract-result : bytes? -> benchmark-trial-time?
 (define (default-extract-result str)

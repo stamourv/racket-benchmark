@@ -12,15 +12,16 @@
   (bench-group
    (if jit "jit" "no jit")
    (map (lambda (f)
-          (mk-shell-benchmark
+          (mk-racket-file-bench
            (cadr (regexp-match #rx"([^.]+)\\.rkt" f))
-           (format (if jit "racket ~a" "racket -j ~a") f)))
+           f
+           (if jit (list) (list "-j"))))
     files)))
 
 (define results
   (run-benchmarks
    (mk-bench-group "" (list (jit-no-jit #t) (jit-no-jit #f)))
-   (mk-bench-opts #:num-trials 31)))
+   (mk-bench-opts #:num-trials 30)))
 
 (record-results results "jit-no-jit.bench")
 
