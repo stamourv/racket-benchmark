@@ -2,7 +2,7 @@ EXCLUDE=plot.rkt
 ALL_TESTS=$(shell ls *.rkt)
 
 .PHONY: tests
-tests: optimization-coach $(foreach t,$(ALL_TESTS), $(t)_test)
+tests: $(foreach t,$(ALL_TESTS), $(t)_test)
 
 .PHONY: clean
 clean:
@@ -16,3 +16,6 @@ clean:
 optimization-coach:
 	cd optimization-coach ; racket run.rkt > /dev/null ; racket plot.rkt > /dev/null
 	@echo "DONE RUNNING optimization-coach"
+
+.PHONY: all
+all: tests optimization-coach
