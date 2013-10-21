@@ -24,6 +24,7 @@
          record-results
          (struct-out bench-results)
          (struct-out linux-bench-results)
+         linux-time-extract-result
          attach-linux-info
          attach-time
          min-samples)
@@ -117,6 +118,7 @@
    [(benchmark-group? bs)
     (append-map run-group-elem (benchmark-group-benchmarks bs))]
    [(benchmark-one? bs) (list (run-one bs))]
+   [(list? bs) (append-map (lambda (b) (run-benchmarks b opts)) bs)]
    [else
     (raise-argument-error
      'run-benchmarks

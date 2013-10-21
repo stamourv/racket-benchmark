@@ -63,23 +63,30 @@
       (define norm-br-name (string-append norm-alt-name "/" br-suff))
       (cond [(null? nl)
              (error (format "Benchmark ~a not found" norm-br-name))]
-            [(> 1 (length nl))
+            [(< 1 (length nl))
              (error (format "Duplicate ~a found" norm-br-name))]
             [else (car nl)]))
-    (filter-map
-     (lambda (br)
-       (if (string-prefix? alt-name-pref (br-name br))
-           (let ([new-name
-                  (substring (br-name br) (string-length alt-name-pref))]
-                 [opts (benchmark-result-opts br)]
-                 [trial-stats (benchmark-result-trial-stats br)])
-             (normalize-br
-              (norm-br new-name)
-              (mk-bench-result
-               (struct-copy benchmark-opts opts [name new-name])
-               trial-stats)))
-           #f))
-     brs))
+    (let
+        ([normd-brs
+          (filter-map
+           (lambda (br)
+             (if (string-prefix? alt-name-pref (br-name br))
+                 (let ([new-name
+                        (substring (br-name br) (string-length alt-name-pref))]
+                       [opts (benchmark-result-opts br)]
+                       [trial-stats (benchmark-result-trial-stats br)])
+                   (normalize-br
+                    (norm-br new-name)
+                    (mk-bench-result
+                     (struct-copy benchmark-opts opts [name new-name])
+                     trial-stats)))
+                 #f))
+           brs)])
+      (if (null? normd-brs)
+          (error (format
+                  "No benchmarks found for alternative group ~a"
+                  alt-name-pref))
+          normd-brs)))
   ;; for comparing individual benchmarks
   (define (select-benchmarks-individual alt-name)
     (define (norm-br)
@@ -89,21 +96,35 @@
                 brs))
       (cond [(null? nl)
              (error (format "Benchmark ~a not found" norm-alt-name))]
-            [(> 1 (length nl))
+            [(< 1 (length nl))
              (error (format "Duplicate ~a found" norm-alt-name))]
             [else (car nl)]))
-    (filter-map
-          (lambda (br)
-            (if (equal? (br-name br) alt-name)
-                (normalize-br (norm-br) br)
-                #f))
-          brs))
+    (let ([normd-brs
+           (filter-map
+            (lambda (br)
+              (if (equal? (br-name br) alt-name)
+                  (normalize-br (norm-br) br)
+                  #f))
+            brs)])
+      (if (null? normd-brs)
+          (error (format "Single: No benchmarks found for alternative '~a'" alt-name))
+          normd-brs)))
   ;; if the norm-alt-name is an actual benchmark anem, we are comparing
   ;; individual benchmarks. otherwise, we are comparing groups
   (define select-benchmarks
     (if (ormap (lambda (br) (equal? (br-name br) norm-alt-name)) brs)
-        select-benchmarks-individual
-        select-benchmarks-group))
+        (begin
+          (displayln
+           (format
+            "~a is a benchmark name, treating alternatives as individual benchmarks"
+            norm-alt-name))
+          select-benchmarks-individual)
+          (begin
+            (displayln
+             (format
+              "~a is not a benchmark name, treating alternatives as group names"
+              norm-alt-name))
+            select-benchmarks-group)))
   (define num-alts (length alt-names))
   (define alt-nums (for/list ([i (in-range 0 num-alts)]) i))
   (define colors

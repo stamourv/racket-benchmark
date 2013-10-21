@@ -6,7 +6,8 @@
 (provide
  mk-shell-bench
  mk-racket-file-bench
- time-shell-cmd)
+ time-shell-cmd
+ linux-time-extract-result)
 
 ;; command : (or/c string-no-nuls? bytes-no-nuls?)
 
@@ -131,6 +132,18 @@
          (bytes->number (cadr m))
          (bytes->number (caddr m))
          (bytes->number (cadddr m))))))
+
+;; linux-time-extract-result : bytes? ->  benchmark-trial-time?
+;; for use with /usr/bin/time -p (POSIX standard 1003.2)
+(define (linux-time-extract-result str)
+  (let ([m (regexp-match #rx#"real ([0-9.]+)" str)])
+    (if (not m)
+        (error (format "Could not parse linux time output: ~a" str))
+        (let ([msecs (* 1000 (bytes->number (cadr m)))])
+          (benchmark-trial-time
+           msecs ;; cpu time
+           msecs ;; real time
+           0)))))   ;; gc time
 
 ;; bytes? -> number?
 (define (bytes->number b)
