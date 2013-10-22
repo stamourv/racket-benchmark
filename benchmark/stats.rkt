@@ -177,12 +177,25 @@
   (define normd-gc-samples
     (map (lambda (s) (* s norm-gc-val))
          (samples benchmark-trial-stats-gc)))
-  (benchmark-result
-   (benchmark-result-opts br)
-   (raw-to-stats (map benchmark-trial-time
-                      normd-cpu-samples
-                      normd-real-samples
-                      normd-gc-samples))))
+  ;;   check that benchmarks are comparable, leveraging transitivity
+  (if (benchmarks-comparable? norm-br br)
+      (benchmark-result
+       (benchmark-result-opts br)
+       (raw-to-stats (map benchmark-trial-time
+                          normd-cpu-samples
+                          normd-real-samples
+                          normd-gc-samples)))
+      (error (format "Benchmarks ~a and ~a not comparable" norm-br br))))
+
+;; Note: this must be a transitive relation to allow comparison of each
+;; benchmark with the one other in the group and know the group is
+;; comparable
+(define (benchmarks-comparable? br1 br2)
+  (andmap
+   (lambda (f) (equal?
+                       (f (benchmark-result-opts br1))
+                       (f (benchmark-result-opts br2))))
+   (list benchmark-opts-gc-between-each benchmark-opts-itrs-per-trial)))
 
 (module+ test
   (test-confidence-interval)
