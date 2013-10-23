@@ -1,4 +1,3 @@
-EXCLUDE=plot.rkt
 ALL_TESTS=$(shell ls *.rkt)
 
 .PHONY: tests
@@ -16,6 +15,11 @@ clean:
 optimization-coach:
 	cd optimization-coach ; racket run.rkt > /dev/null ; racket plot.rkt > /dev/null
 	@echo "DONE RUNNING optimization-coach"
+
+.PHONY: sanity
+sanity:
+	cd sanity ; racket sanity-run.rkt  ; racket sanity-plot.rkt > /dev/null
+	@echo "DONE RUNNING sanity"
 
 .PHONY: all
 all: tests optimization-coach
