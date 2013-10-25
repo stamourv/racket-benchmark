@@ -89,6 +89,23 @@ identifiers exposed.
     evaluates the thunk enough times so to minimize noise due to clock
     tick resolution.}
 
+@defproc[(linux-time-extract-result [str bytes?])
+         benchmark-trial-time?]{
+To be used with @(racket #:extract-result) for the output of
+@(shell /usr/bin/time -p) (i.e. POSIX standard 1003.2). Parses
+@(shell /usr/bin/time -p) output and sets @(racket cpu) and @(racket real)
+fields of @(benchmark-trial-time?) to "user" time reported by
+@(shell /usr/bin/time -p). The @(racket gc) of @(benchmark-trial-time?) is
+set to @(racket 0).
+}
+
+@defstruct[benchmark-trial-time? ([cpu real?]
+                                  [real real?]
+                                  [gc real?])
+           #:prefab]{
+Data structure for reporting the time of a single trial.
+}
+
 @defform*[((bench-one name expr opts)
                     (bench-one name expr)
                     (bench-one expr))]{
@@ -175,6 +192,7 @@ want additional control over what precisely is being timed. When
           void?]{
     When uesd with @(racket #:time-external #f) in @(racket benchmark-opts?),
     reports the time required to evaluate @(racket (thunk)).
+}
 
 @section[#:tag "Plotting"]{Plotting}
 @(racket benchmark) exports a @(racket renderer2d?) for plotting results
@@ -187,11 +205,55 @@ of benchmarks.
     error bars.
     }
 
-@section [#:tag "Persisting Results"]{Persisting Results}
+@section[#:tag "Persisting Results"]{Persisting Results}
 Results can be persisted with @(racket record-results) and retrieved
 with @(racket get-past-results).
 
-@defproc[(record-results [results bench-results?]
+@defproc[(record-results [results any/c]
                          [file path?])
          void?]
+Persists @(racket results) to file-<n> where <n> is the smallest natural
+such that file-<n> doesn't exist.
 
+@defproc[(get-past-results [file path?]
+                           [version (or/c exact-integer? #f) #f])
+         any/c]{
+If @(racket version) is specified by user, reads @(racket bench-results?) from
+file-version. Otherwise, reads @(racket bench-results?) from file-<n> where
+n is the largest natural such that file-<n> does not exist.
+}
+
+@defstruct[bench-results ([results any/c]
+                          [time/date date*]) #:prefab]{
+Base struct for persisting results to files.
+}
+
+@defstruct[(linux-bench-results bench-results) ([hostname string?]
+                                                [uname string?])
+           #:prefab]{
+Extension of @(racket bench-results) struct for persisting additional info
+of Linux uname and hostname. The most convenient way to get this information
+is using @(racket attach-linux-info).
+}
+
+@defproc[(attach-linux-info [results any/c]) linux-bench-result?]{
+Injects @(racket results) into @(racket linux-bench-result?) after
+getting uname, hostname, and date/time.
+}
+
+@defproc[(attach-date/time [results any/c]) linux-bench-result?]{
+Injects @(racket results) into @(racket bench-result?) after
+getting date/time.
+}
+
+@section[#:tag "miscellaneous"]{Miscellaneous}
+@defparam[min-samples num exact-integer?]{
+Controls the minium number of samples needed to calculate confidence
+intervals. By default this is set to @(racket 30), but it is often
+useful to reduce this while debugging so that statistics can be
+calculated for fewer than 30 samples.
+
+An error message of the form "number of samples (~a) must be >= ~a"
+indicates that @(racket num-trials) for some benchmark is less than
+@(racket (min-samples)).
+}
