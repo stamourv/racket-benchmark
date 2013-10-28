@@ -20,7 +20,7 @@
 
 (define results
   (run-benchmarks
-   (mk-bench-group "" (list (jit-no-jit #t) (jit-no-jit #f)))
+   (list (jit-no-jit #t) (jit-no-jit #f))
    (mk-bench-opts #:num-trials 30)))
 
 (record-results results "jit-no-jit.bench")

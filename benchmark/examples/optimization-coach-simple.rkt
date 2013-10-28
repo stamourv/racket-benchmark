@@ -32,11 +32,9 @@
 (require (submod "." typed) benchmark plot)
 
 (define benches
-  (mk-bench-group
-   ""
-   (list
-    (mk-bench-group "partial" (map mk-bench-one names partial-thunks))
-    (mk-bench-group "complete" (map mk-bench-one names complete-thunks)))))
+  (list
+   (mk-bench-group "partial" (map mk-bench-one names partial-thunks))
+   (mk-bench-group "complete" (map mk-bench-one names complete-thunks))))
 
 (define results
   (run-benchmarks

@@ -22,11 +22,9 @@
   (string->number (bytes->string/latin-1 b)))
 
 (define benches
-  (bench-group
-   ""
-   (map
-    (lambda (n) (mk-bench-group (format "trial ~a" n) (list (ping 2))))
-    (for/list ([i (in-range 0 num-trials)]) i))))
+  (map
+   (lambda (n) (mk-bench-group (format "trial ~a" n) (list (ping 2))))
+   (for/list ([i (in-range 0 num-trials)]) i)))
 
 (define results
   (run-benchmarks

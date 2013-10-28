@@ -27,9 +27,8 @@
 
 (define results
   (run-benchmarks
-   (mk-bench-group ""
-    (list fib-internal-group fib-external-group)
-    (mk-bench-opts #:gc-between #f)))) 
+   (list fib-internal-group fib-external-group)
+   (mk-bench-opts #:gc-between #f)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

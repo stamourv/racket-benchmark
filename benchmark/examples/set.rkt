@@ -31,24 +31,21 @@
    (map (lambda (v) (lookup-fn set v)) vals)))
 
 (define benches
-  (bgroup       ;; a top-level group for combining our list set
-   ;; implementation and the racket set implementation
-   ""
-   (list
-    (bgroup
-     "list set" ;; name of this group
-     ;; list of benchmark-one? in this group (one per element of sample-lists)
-     (map (lambda (set vals)
-            (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
-          sample-lists
-          sample-vals))
-    (bgroup
-     "racket set" ;; name of this group
-     ;; list of benchmark-one? in this group (one per element of sample-sets)
-     (map (lambda (set vals)
-            (mk-bench set-member? set vals (set-count set)))
-          sample-sets
-          sample-vals)))))
+  (list
+   (bgroup
+    "list set" ;; name of this group
+    ;; list of benchmark-one? in this group (one per element of sample-lists)
+    (map (lambda (set vals)
+           (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
+         sample-lists
+         sample-vals))
+   (bgroup
+    "racket set" ;; name of this group
+    ;; list of benchmark-one? in this group (one per element of sample-sets)
+    (map (lambda (set vals)
+           (mk-bench set-member? set vals (set-count set)))
+         sample-sets
+         sample-vals))))
 
 (define results
   (run-benchmarks

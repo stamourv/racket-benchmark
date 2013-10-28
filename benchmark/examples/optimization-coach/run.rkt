@@ -15,12 +15,10 @@
     files)))
 
 (define benchmarks
-  (bench-group
-   ""
-   (map
-    (lambda (otfs)
-      (mk-optimization-group (car otfs) (cdr otfs)))
-    optimization-type-files)))
+  (map
+   (lambda (otfs)
+     (mk-optimization-group (car otfs) (cdr otfs)))
+   optimization-type-files))
 
 (record-results
  (run-benchmarks benchmarks (mk-bench-opts #:num-trials 30))
