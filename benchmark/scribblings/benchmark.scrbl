@@ -1,24 +1,26 @@
 #lang scribble/manual
 
+Benchmark is provided as a library.
+
 @(require (for-label racket plot racket/set) scribble/eval)
 
-@title[#:tag "top"]{Benchmarking}
+@title[#:tag "top"]{Benchmark}
 @author{@(author+email "Josh McGrath" "mcgrathj@ccs.neu.edu")}
 
 @defmodule[benchmark]
 
 The goal of the benchmark library is to reduce the effort of writing
-benchmarks for comparing alternatives. In the simplest case, only names
-of specific benchmarks, names of containing groups, and expressions
-must be specified. At the same time, control over gc, number of times run,
-what precisely is timed, are exposed in case additional configuration is
-required. Currently this library is in a pre-alpha state.
+benchmarks for comparing alternatives. In the simplest case, only the
+expressions to be evaluated must be specified. At the same time,
+control over gc, number of iterations, what precisely is timed,
+etc. are exposed in case additional configuration is
+desired. Currently this library is in a alpha state.
 
 @table-of-contents[]
 
 @section[#:tag "simple example"]{A Simple Example}
 To gain some confidence in our benchmarking framework, let's begin by
-benchmarking Racket's 
+benchmarking Racket's @(racket sleep).
 
 @#reader scribble/comment-reader
 
@@ -39,22 +41,20 @@ benchmarking Racket's
  ;; benches : (listof benchmark-one?)
  (define benches (map sleep-internal-bench times))
 
- ;; results : (listof benchmark-result?)
+ ;; ;; results : (listof benchmark-result?)
  ;; (define results (run-benchmarks benches
  ;;                                 (mk-bench-opts
  ;;                                  #:itrs-per-trial 1
  ;;                                  #:num-trials 30)))
 
- ;; record results in a file
- 
- ;; plot results
+ ;; ;; plot results
  ;; (parameterize ([plot-x-ticks no-ticks])
  ;;  (plot-pict #:x-label #f #:y-label "normalized time"
  ;;             (render-benchmark-alts (map fmt times) (fmt (car times)) results)))
  )
 
-Phew! The rest of the document is structured as a reference for the
-identifiers exposed.
+The normalized times of the benchmarks compare as we expect. The rest
+of the document is structured as a reference.
 
 @section[#:tag "single benchmark"]{Individual Benchmarks}
 
@@ -62,65 +62,71 @@ identifiers exposed.
                        [thunk procedure?]
                        [opts benchmark-opts? (mk-bench-opts)])
                        benchmark-one?]{
-    Produces a @(racket benchmark-one?) with associated @(racket name) for
-    computing the time to evaluate @(racket thunk)
-    @(racket (benchmark-opts itrs-per-trial)) times with specified
-    @(racket opts).
-    }
+Produces a @(racket benchmark-one?) with associated @(racket name) for
+computing the time to evaluate @(racket thunk)
+@(racket (benchmark-opts itrs-per-trial)) times with specified
+@(racket opts). This is the core structure of this library for
+specifying how to run a benchmark.
+}
 
-@defproc[(mk-shell-bench [name string?]
-                         [run (or/c procedure? string-no-nuls? bytes-no-nuls?)]
-                         [configure (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
-                         [build (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
-                         [extract-result (-> bytes? benchmark-trial-time?) default-extract-result]
-                         [clean (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
-                         [opts benchmark-opts? (mk-bench-opts #:itrs-per-trial 1
-                                                      #:time-external #f)])
+@defform*[((bench-one name expr opts)
+           (bench-one name expr)
+           (bench-one expr))]{
+The @(racket bench-one) macro is merely a wrapper for @(racket
+mk-bench-one) to admit raw expressions where thunks are required in
+@(racket mk-bench-one) and to derivce a name from the expression if no
+name is given.
+}
+
+@defproc[(mk-shell-bench
+          [name string?]
+          [run (or/c procedure? string-no-nuls? bytes-no-nuls?)]
+          [configure (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+          [build (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+          [extract-result (-> bytes? benchmark-trial-time?) default-extract-result]
+          [clean (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+          [opts benchmark-opts? (mk-bench-opts #:itrs-per-trial 1
+                                               #:time-external #f)])
          benchmark-one?]{
-    Produces a @(racket benchmark-one?) with associated @(racket name) for
-    the time @bold{reported} to evaluate @(racket (run)) if @(racket run) is a
-    @(racket procedure?) or @(racket (system run)) otherwise. Time must be
-    reported by @(racket run) via stdout in such a way that @(racket extract-result)
-    can produce a @(racket benchmark-trial-time?). Because @(racket run) is
-    expected to report its time, the default @(racket bench-opts?) used
-    has @(racket #:itrs-per-trial 1). That is, the trial reported by
-    @(racket run) is precisely the time for that trial. In contrast, the default
-    @(racket #:itrs-per-trial 500) for @(racket mk-bench-one)
-    evaluates the thunk enough times so to minimize noise due to clock
-    tick resolution.}
+Produces a @(racket benchmark-one?) with associated @(racket name) for
+evaluating the time @bold{reported} to evaluate @(racket (run)) if
+@(racket run) is a @(racket procedure?) or @(racket (system run))
+otherwise. Time must be reported by @(racket run) via stdout so that
+that @(racket extract-result) can produce a @(racket
+benchmark-trial-time?), hence @(racket #:time-external #f). Note: the
+default for @(racket #:extract-time) works for the output of
+@(racket time). Because @(racket run) is expected to report its
+time, the default @(racket bench-opts?) used has @(racket
+#:itrs-per-trial 1). That is, the trial time is precisely that
+reported by @(racket run). In contrast, the default @(racket
+#:itrs-per-trial 500) for @(racket mk-bench-one) evaluates the thunk
+enough times so to minimize noise due to clock tick resolution.
+}
 
 @defproc[(linux-time-extract-result [str bytes?])
          benchmark-trial-time?]{
-To be used with @(racket #:extract-result) for the output of
-@(shell /usr/bin/time -p) (i.e. POSIX standard 1003.2). Parses
-@(shell /usr/bin/time -p) output and sets @(racket cpu) and @(racket real)
-fields of @(benchmark-trial-time?) to "user" time reported by
-@(shell /usr/bin/time -p). The @(racket gc) of @(benchmark-trial-time?) is
-set to @(racket 0).
+To be used with @(racket #:extract-result) for the output of @(racket
+/usr/bin/time -p) (i.e. POSIX standard 1003.2). Parses @(racket
+/usr/bin/time -p) output and sets @(racket cpu) and @(racket real)
+fields of @(racket benchmark-trial-time?) to "user" time reported by
+@(racket /usr/bin/time -p). The @(racket gc) of @(racket
+benchmark-trial-time?) is set to @(racket 0). Please note that there
+is also a time built-in for some shells, but isn't what is called when
+using @(racket (system "time sleep 1")).
 }
 
 @defstruct[benchmark-trial-time? ([cpu real?]
                                   [real real?]
                                   [gc real?])
            #:prefab]{
-Data structure for reporting the time of a single trial.
+Data structure for reporting the time of a single trial. This is
+exposed to allow the user to write her own @(racket #:extract-time).
 }
-
-@defform*[((bench-one name expr opts)
-                    (bench-one name expr)
-                    (bench-one expr))]{
-    Produces a @(racket benchmark-one?) for the supplied @(racket expr).
-    If @(racket name) is not provided, the string form of @(racket expr) is
-    used as the name. If @(racket name) is provided, it is expected to be a
-    string. If @(racket opts) is not provided,
-    @(racket (mk-bench-opts is used)). If @(racket opts) is provided, it is
-    expected to have type @(racket benchmark-opts?).
-    }
 
 @section[#:tag "grouping benchmarks"]{Groups of Benchmarks}
 @defproc[(mk-bench-group [name string?]
-                                              [benchmarks (listof (or/c benchmark-one? benchmark-group?))]
-                                              [opts benchmark-opts? (mk-bench-opts)])
+                         [benchmarks (listof (or/c benchmark-one? benchmark-group?))]
+                         [opts benchmark-opts? (mk-bench-opts)])
          benchmark-group?]{}
 
 Creates a @(racket benchmark-group?) with specified @(racket name)
@@ -231,9 +237,9 @@ Base struct for persisting results to files.
 @defstruct[(linux-bench-results bench-results) ([hostname string?]
                                                 [uname string?])
            #:prefab]{
-Extension of @(racket bench-results) struct for persisting additional info
-of Linux uname and hostname. The most convenient way to get this information
-is using @(racket attach-linux-info).
+Extension of @(racket bench-results) struct for persisting additional
+info of Linux uname and hostname. The most convenient way to get this
+information is using @(racket attach-linux-info).
 }
 
 @defproc[(attach-linux-info [results any/c]) linux-bench-result?]{
@@ -257,3 +263,7 @@ An error message of the form "number of samples (~a) must be >= ~a"
 indicates that @(racket num-trials) for some benchmark is less than
 @(racket (min-samples)).
 }
+
+@;; Local Variables:
+@;; compile-command: "raco setup benchmark"
+@;; End:
