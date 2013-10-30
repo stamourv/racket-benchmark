@@ -69,6 +69,20 @@ computing the time to evaluate @(racket thunk)
 specifying how to run a benchmark.
 }
 
+@#reader scribble/comment-reader
+
+(examples
+ (require benchmark racket/function)
+ 
+ (mk-bench-one "sleep .1" (thunk (sleep .1)))
+ ;; gc takes a long time to run, so we need to only run it once
+ ;; to get a reasonably-sized (~ 50 ms) time
+ ;; also don't run gc between each trial, because that's what we
+ ;; are trying to measure
+ (mk-bench-one "gc" (thunk (collect-garbage))
+               (mk-bench-opts #:gc-between #f
+                              #:itrs-per-trial 1)))
+
 @defform*[((bench-one name expr opts)
            (bench-one name expr)
            (bench-one expr))]{
@@ -78,12 +92,30 @@ mk-bench-one) to admit raw expressions where thunks are required in
 name is given.
 }
 
+Using the examples from @(racket mk-bench-one):
+
+@#reader scribble/comment-reader
+
+(examples
+ (require benchmark racket/function)
+
+ ;; don't need to specify name or use thunk
+ ;; we see that in the benchmark-opts that the string form
+ ;; of our expression "(sleep 0.1)" is used for the name
+ (bench-one (sleep .1))
+
+ ;; don't need to use thunk, but still need
+ ;; to specify name as (bench-one expr opts) is not supported
+ (bench-one "gc" (collect-garbage)
+            (mk-bench-opts #:gc-between #f
+                           #:itrs-per-trial 1)))
+
 @defproc[(mk-shell-bench
           [name string?]
           [run (or/c procedure? string-no-nuls? bytes-no-nuls?)]
           [configure (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
           [build (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
-          [extract-result (-> bytes? benchmark-trial-time?) racket-extract-result]
+          [extract-result (-> bytes? benchmark-trial-time?) racket-time-extract-result]
           [clean (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
           [opts benchmark-opts? (mk-bench-opts #:itrs-per-trial 1
                                                #:manual-report-time #t)])
@@ -91,28 +123,33 @@ name is given.
 
                          
 Produces a @(racket benchmark-one?) with associated @(racket name) for
-evaluating the time @bold{reported} to evaluate @(racket (run)) if
+evaluating the time reported to evaluate @(racket (run)) if
 @(racket run) is a @(racket procedure?) or @(racket (system run))
 otherwise.
 
 Time must be reported by @(racket run) via stdout so that
 that @(racket extract-result) can produce a @(racket
 benchmark-trial-time?), hence @(racket #:manual-report-time #t). Note:
-@(racket racket-extract-result) works for the output of
+@(racket racket-time-extract-result) parses the output of Racket's
 @(racket time).
 
 Additionally, because @(racket run) is expected to report its
-time, the default @(racket bench-opts?) used has @(racket
+time, the default @(racket benchmark-opts?) used has @(racket
 #:itrs-per-trial 1). That is, the trial time is precisely that
 reported by @(racket run). In contrast, the default @(racket
-#:itrs-per-trial 500) for @(racket mk-bench-one) evaluates the thunk
-enough times so to minimize noise due to clock tick resolution.
+#:itrs-per-trial 500) for @(racket mk-bench-one) is meant to
+evaluate the thunk enough times so to minimize noise due to
+clock tick resolution.
 }
 
 @defproc[(linux-time-extract-result [str bytes?])
          benchmark-trial-time?]{
 To be used with @(racket #:extract-result) for the output of @(racket
-/usr/bin/time -p) (i.e. POSIX standard 1003.2). Parses @(racket
+/usr/bin/time -p) (i.e. POSIX standard 1003.2). Please note that
+/usr/bin/time reports time to stderr, so it must
+be redirected to stdout, as only stdout is captured.
+
+Parses @(racket
 /usr/bin/time -p) output and sets @(racket cpu) and @(racket real)
 fields of @(racket benchmark-trial-time?) to "user" time reported by
 @(racket /usr/bin/time -p). The @(racket gc) of @(racket
@@ -120,6 +157,38 @@ benchmark-trial-time?) is set to @(racket 0). Please note that there
 is also a time built-in for some shells, but isn't what is called when
 using @(racket (system "time sleep 1")).
 }
+
+Suppose we have a file @(racket "a.rkt") in our current directory
+that has the following contents:
+
+@#reader scribble/comment-reader
+
+@codeblock|{
+  #lang racket
+  
+  ;; sleep for some time t \in [0, 1]
+  ;; prints time to stdout in the form:
+  ;; cpu time: 55 real time: 58 gc time: 55
+  (time (sleep (random)))
+  }|
+
+@#reader scribble/comment-reader
+
+(examples
+ (require benchmark)
+
+ ;; run a.rkt using default for #:extract-result
+ (mk-shell-bench
+  "a.rkt"        ;; name of benchmark
+  "racket a.rkt" ;; command to run using system
+  )
+
+ ;; use /usr/bin/time to benchmark /bin/sleep
+ ;; specifying linux-time-extract-result to extract time from stdout
+ (mk-shell-bench
+  (format "sleep ~a" n)
+  (format "( /usr/bin/time -p sleep 5 ) 2>&1" n)
+  #:extract-result linux-time-extract-result))
 
 @defstruct[benchmark-trial-time? ([cpu real?]
                                   [real real?]

@@ -74,7 +74,7 @@
          #:build [build nothing]                 ;; m-command-or-proc
          #:extract-result
          [extract-result
-          default-extract-result] ;; (bytes? -> benchmark-trial-time?)
+          racket-time-extract-result] ;; (bytes? -> benchmark-trial-time?)
          #:clean [clean nothing]                 ;; m-command-or-proc
          #:opts [opts (mk-bench-opts
                        #:itrs-per-trial 1
@@ -101,7 +101,7 @@
          #:build [build (format "raco make ~a" fname)] ;; m-command-or-proc
          #:extract-result
          [extract-result
-          default-extract-result]             ;; (bytes-> benchmark-trial-time?)
+          racket-time-extract-result]             ;; (bytes-> benchmark-trial-time?)
          #:clean [clean nothing]              ;; m-command-or-proc
          #:opts [opts (mk-bench-opts
                        #:itrs-per-trial 1
@@ -123,8 +123,8 @@
       (list)
       (cons (car lst) (cons val (intersperse (cdr lst) val)))))
 
-;; default-extract-result : bytes? -> benchmark-trial-time?
-(define (default-extract-result str)
+;; racket-time-extract-result : bytes? -> benchmark-trial-time?
+(define (racket-time-extract-result str)
   (let* ([m (regexp-match #rx#"cpu time: ([0-9]+) real time: ([0-9]+) gc time: ([0-9]+)" str)])
     (if (not m)
         (error (format "Could not parse time output: ~a" str))
