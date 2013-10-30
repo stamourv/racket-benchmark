@@ -24,7 +24,7 @@
 
 ;; benchmark lookup-fn querying set for each of vals
 (define (mk-bench lookup-fn set vals set-count)
-  (b1
+  (bench-one
    ;; name of this benchmark
    (format "~a/~a" set-count (length vals))
    ;; expression to benchmark
@@ -32,14 +32,14 @@
 
 (define benches
   (list
-   (bgroup
+   (mk-bench-group
     "list set" ;; name of this group
     ;; list of benchmark-one? in this group (one per element of sample-lists)
     (map (lambda (set vals)
            (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
          sample-lists
          sample-vals))
-   (bgroup
+   (mk-bench-group
     "racket set" ;; name of this group
     ;; list of benchmark-one? in this group (one per element of sample-sets)
     (map (lambda (set vals)
@@ -50,7 +50,7 @@
 (define results
   (run-benchmarks
    benches                      ;; benchmarks to run
-   (bopts
+   (mk-bench-opts
     ;; don't run gc between each iteration (because it takes a long time
     ;; to build the document when gc runs)
     #:gc-between #f
