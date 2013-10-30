@@ -78,7 +78,7 @@
          #:clean [clean nothing]                 ;; m-command-or-proc
          #:opts [opts (mk-bench-opts
                        #:itrs-per-trial 1
-                       #:time-external #f)])     ;; benchmark-opts?
+                       #:manual-report-time #t)])     ;; benchmark-opts?
   (bench-one
    name
    (report-time (time-shell-cmd
@@ -105,7 +105,7 @@
          #:clean [clean nothing]              ;; m-command-or-proc
          #:opts [opts (mk-bench-opts
                        #:itrs-per-trial 1
-                       #:time-external #f)])  ;; benchmark-opts?
+                       #:manual-report-time #t)])  ;; benchmark-opts?
   (mk-shell-bench
    name
    (intercalate-strings (cons "racket" (append args (list fname))) " ")
