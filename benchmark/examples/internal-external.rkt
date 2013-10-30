@@ -18,7 +18,7 @@
   (mk-bench-group
    "internals"
    (map (lambda (n) (mk-fib-bench n fib-internal)) fib-inputs)
-   (mk-bench-opts #:time-external #f)))
+   (mk-bench-opts #:manual-report-time #t)))
 
 (define fib-external-group
   (mk-bench-group

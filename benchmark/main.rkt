@@ -50,8 +50,8 @@
         [trials (opt-val benchmark-opts-num-trials)]
         [itrs (opt-val benchmark-opts-itrs-per-trial)]
         [discard (opt-val benchmark-opts-discard-first)]
-        [time-external (opt-val benchmark-opts-time-external)])
-    (benchmark-opts name gc trials itrs discard time-external)))
+        [manual-report-time (opt-val benchmark-opts-manual-report-time)])
+    (benchmark-opts name gc trials itrs discard manual-report-time)))
 
 ;; append-default-opts : benchmark-opts? -> benchmark-opts?
 (define (append-default-opts o) (append-opts o default-opts))
@@ -94,8 +94,8 @@
                   (collect-garbage)
                   (collect-garbage))
                 (cond
-                 ;; time external (using time-apply)
-                 [(benchmark-opts-time-external final-opts)
+                 ;; we will do the timing using time-apply
+                 [(not (benchmark-opts-manual-report-time final-opts))
                   (let-values
                       ([(_ cpu real gc)
                         (time-apply

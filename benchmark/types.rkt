@@ -102,22 +102,22 @@
    num-trials      ;; exact-integer?
    itrs-per-trial  ;; exact-integer?
    discard-first   ;; boolean?
-   time-external   ;; boolean?
+   manual-report-time   ;; boolean?
    )
   #:prefab
   )
 
 (define (mk-bench-opts
-         #:name [name ""]                          ;; string?
-         #:gc-between [gc-between nothing]         ;; boolean?
-         #:num-trials [num-trials nothing]         ;; exact-integer?
-         #:itrs-per-trial [itrs-per-trial nothing] ;; exact-integer?
-         #:discard-first [discard-first nothing]   ;; boolean?
-         #:time-external [time-external nothing])  ;; boolean?
+         #:name [name ""]                                   ;; string?
+         #:gc-between [gc-between nothing]                  ;; boolean?
+         #:num-trials [num-trials nothing]                  ;; exact-integer?
+         #:itrs-per-trial [itrs-per-trial nothing]          ;; exact-integer?
+         #:discard-first [discard-first nothing]            ;; boolean?
+         #:manual-report-time [manual-report-time nothing]) ;; boolean?
   (benchmark-opts name gc-between num-trials itrs-per-trial
-                  discard-first time-external))
+                  discard-first manual-report-time))
 
-(define default-opts (benchmark-opts "" #t 100 500 #t #t))
+(define default-opts (benchmark-opts "" #t 100 500 #t #f))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Benchmark Results ;;;;;;;;;;;;;;;;;;;;;;;;;
 

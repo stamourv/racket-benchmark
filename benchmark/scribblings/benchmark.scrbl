@@ -83,19 +83,25 @@ name is given.
           [run (or/c procedure? string-no-nuls? bytes-no-nuls?)]
           [configure (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
           [build (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
-          [extract-result (-> bytes? benchmark-trial-time?) default-extract-result]
+          [extract-result (-> bytes? benchmark-trial-time?) racket-extract-result]
           [clean (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
           [opts benchmark-opts? (mk-bench-opts #:itrs-per-trial 1
-                                               #:time-external #f)])
+                                               #:manual-report-time #t)])
          benchmark-one?]{
+
+                         
 Produces a @(racket benchmark-one?) with associated @(racket name) for
 evaluating the time @bold{reported} to evaluate @(racket (run)) if
 @(racket run) is a @(racket procedure?) or @(racket (system run))
-otherwise. Time must be reported by @(racket run) via stdout so that
+otherwise.
+
+Time must be reported by @(racket run) via stdout so that
 that @(racket extract-result) can produce a @(racket
-benchmark-trial-time?), hence @(racket #:time-external #f). Note: the
-default for @(racket #:extract-time) works for the output of
-@(racket time). Because @(racket run) is expected to report its
+benchmark-trial-time?), hence @(racket #:manual-report-time #t). Note:
+@(racket racket-extract-result) works for the output of
+@(racket time).
+
+Additionally, because @(racket run) is expected to report its
 time, the default @(racket bench-opts?) used has @(racket
 #:itrs-per-trial 1). That is, the trial time is precisely that
 reported by @(racket run). In contrast, the default @(racket
@@ -140,7 +146,7 @@ are used.
                         [#:num-trials num-trials (or/c exact-integer? nothing?) nothing]
                         [#:itrs-per-trial itrs-per-trial(or/c exact-integer? nothing?) nothing]
                         [#:discard-first discard-first (or/c boolean? nothing?) nothing]
-                        [#:time-external time-external (or/c boolean? nothing?) nothing])
+                        [#:manual-report-time manual-report-time (or/c boolean? nothing?) nothing])
          benchmark-opts?]{
     Produces @(racket (benchmark-opts?)) used for configuring how benchmarks,
     at the @(racket benchmark-group?) @(racket benchmark-one?) or top-level are
@@ -180,12 +186,13 @@ The keyword argument @(racket #:discard-first) determines whether the first
 trial time is discarded. The purpose for this is to mitigate additional overhead
 due to initialization.
 
-@subsection[#:tag "time-external"]{Time External}
+@subsection[#:tag "manual-report-time"]{Manually Reporting Time}
+;; TODO: update to reflect new name and semantics
 The two forms of timing suppored at "internal" and "external". External timing
 is the default, and is the end-to-end time to evaluate a thunk using
 @(racket time-apply). On the other hand, a consumer of this library may
 want additional control over what precisely is being timed. When
-@(racket #:time-external) is set to @(racket #f), the consumer may use
+@(racket #:manual-report-time) is set to @(racket #t), the consumer may use
 @(racket time-internal) to indicate the trial time.
 
 @section[#:tag "running benchmarks"]{Runing Benchmarks}
@@ -196,7 +203,7 @@ want additional control over what precisely is being timed. When
 @section[#:tag "Benchmark Times"]{Benchmark Times}
 @defproc[(time-internal [thunk procedure?])
           void?]{
-    When uesd with @(racket #:time-external #f) in @(racket benchmark-opts?),
+    When uesd with @(racket #:manual-report-time #f) in @(racket benchmark-opts?),
     reports the time required to evaluate @(racket (thunk)).
 }
 
