@@ -1,5 +1,5 @@
 SOURCE_DIR=benchmark
-IGNORE=benchmark/external optimization-coach/oc-external benchmark/external
+IGNORE=examples/external optimization-coach/oc-external
 SOURCE_FILES=$(shell find $(SOURCE_DIR) -name '*.rkt' -o -name '*.scrbl' | \
 				     grep -v "$(shell echo '$(IGNORE)' | sed 's/ /\\|/g')")
 
