@@ -1,4 +1,4 @@
-:#lang racket
+#lang racket
 
 (require plot benchmark "common.rkt")
 
