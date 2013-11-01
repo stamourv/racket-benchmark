@@ -31,22 +31,22 @@ benchmarking Racket's @(racket sleep).
 
  ;; times : (listof (>=/c 0))
  ;; times to sleep for
- (define times (list .1 .2 .3))
+ (define times (list .01 .02 .03))
 
  ;; benches : (listof benchmark-one?)
  (define benches
    (map (lambda (n) (bench-one (fmt n) (sleep n))) times))
 
  ;; ;; results : (listof benchmark-result?)
- ;; (define results (run-benchmarks benches
- ;;                                 (mk-bench-opts
- ;;                                  #:itrs-per-trial 1
- ;;                                  #:num-trials 30)))
+ (define results (run-benchmarks benches
+                                 (mk-bench-opts
+                                  #:itrs-per-trial 1
+                                  #:num-trials 30)))
 
  ;; ;; plot results
- ;; (parameterize ([plot-x-ticks no-ticks])
- ;;  (plot-pict #:x-label #f #:y-label "normalized time"
- ;;             (render-benchmark-alts (map fmt times) (fmt (car times)) results)))
+ (parameterize ([plot-x-ticks no-ticks])
+  (plot-pict #:x-label #f #:y-label "normalized time"
+             (render-benchmark-alts (map fmt times) (fmt (car times)) results)))
  )
 
 This illustrates a few features of this library.
@@ -311,17 +311,67 @@ for reporting times of shell benchmarks.
 Benchmarks form a tree where @(racket benchmark-group?) are internal
 nodes and @(racket benchmark-one?) are leafs. Both of these nodes have
 @(racket benchmark-opts?) attached. For any node (internal or leaf) in
-the tree, field @(racket f) of @(racket benchmark-opts?) is the value
-of the @(racket f) for the @(racket benchmark-opts?) of that node if
-it is not @(racket nothing?). Otherwise, the value for field @(racket
-f) is inhereted from the parent node. The process is bootstrapped by
-filling in fields with @(racket nothing?) values in the @(racket
-benchmark-opts?)  of the root node with the defaults of @(racket
-opts-default) prior to calling @(racket run-benchmarks).
+the tree, field @(racket f) (except for name) of @(racket
+benchmark-opts?) is the value of the @(racket f) for the @(racket
+benchmark-opts?) of that node if it is not @(racket
+nothing?). Otherwise, the value for field @(racket f) is inhereted
+from the parent node. The process is bootstrapped by filling in fields
+with @(racket nothing?) values in the @(racket benchmark-opts?)  of
+the root node with the defaults of @(racket default-opts) prior to
+calling @(racket run-benchmarks).
+
+The name option, however, behaves differently. Analogous to how
+absolute paths are formed in filesystems, benchmark names are formed
+where @(racket benchmark-group?) corresponds to a directory and
+@(racket benchmark-one?) corresponds to a file.
 
 @#reader scribble/comment-reader
 (examples
- )
+ (require benchmark (only-in "run.rkt" append-opts))
+
+ (append-opts
+  (mk-bench-opts #:name "group-name"
+                 #:gc-between #t
+                 #:num-trials 10
+                 #:itrs-per-trial 40)
+  (mk-bench-opts #:name "test-name"
+                 #:num-trials 20
+                 #:discard-first #f)))
+
+@subsection[#:tag "default options"]{Default Options}
+
+The following are the default options used if no others are provided.
+
+@#reader scribble/comment-reader
+@(racketblock
+  (define default-opts
+    (mk-benchmark-opts #:name ""
+                       #:gc-between #t
+                       #:num-trials 100
+                       #:itrs-per-trial 500
+                       #:discard-first #t
+                       #:manual-report-time #f))
+  )
+
+And now if we take our previous result and combine it with the default
+options. Note: default options are specified first, as they have lower
+precedence.
+
+@#reader scribble/comment-reader
+(examples
+ (require benchmark (only-in "run.rkt" append-opts default-opts))
+
+ (append-opts
+  default-opts
+  (append-opts
+   (mk-bench-opts #:name "group-name"
+                  #:gc-between #t
+                  #:num-trials 10
+                  #:itrs-per-trial 40)
+   (mk-bench-opts #:name "test-name"
+                  #:num-trials 20
+                  #:discard-first #f))
+  ))
 
 @section[#:tag "running benchmarks"]{Runing Benchmarks}
 @defproc[(run-benchmarks [benchmarks (or/c benchmark-one? benchmark-group? (listof (or/c benchmark-one? benchmark-group?)))]
@@ -332,7 +382,7 @@ opts-default) prior to calling @(racket run-benchmarks).
 @defproc[(time-internal [thunk procedure?])
           void?]{
     When uesd with @(racket #:manual-report-time #f) in @(racket benchmark-opts?),
-    reports the time required to evaluate @(racket (thunk)).
+    reports the time required to evaluate @(racket (thunk)) for a single trial.
 }
 
 @section[#:tag "Plotting"]{Plotting}
@@ -342,9 +392,9 @@ of benchmarks.
                                 [norm-alt-name string?]
                                 [benchmark-results (listof benchmark-result?)])
          renderer2d?]{
-    Produces a @(racket renderer2d?) for the specified benchmark results with
-    error bars.
-    }
+Produces a @(racket renderer2d?) for the specified benchmark results
+with error bars based on 95% confidence intervals.
+}
 
 @section[#:tag "Persisting Results"]{Persisting Results}
 Results can be persisted with @(racket record-results) and retrieved
@@ -359,9 +409,9 @@ such that file-<n> doesn't exist.
 @defproc[(get-past-results [file path?]
                            [version (or/c exact-integer? #f) #f])
          any/c]{
-If @(racket version) is specified by user, reads @(racket bench-results?) from
-file-version. Otherwise, reads @(racket bench-results?) from file-<n> where
-n is the largest natural such that file-<n> does not exist.
+If @(racket version) is specified by user, reads results from
+file-<version>. Otherwise, reads @(racket bench-results?) from file-<n> where
+n is the largest natural such that file-<n+1> does not exist.
 }
 
 @defstruct[bench-results ([results any/c]
