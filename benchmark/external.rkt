@@ -7,6 +7,7 @@
  mk-shell-bench
  mk-racket-file-bench
  time-shell-cmd
+ racket-time-extract-result
  linux-time-extract-result)
 
 ;; command : (or/c string-no-nuls? bytes-no-nuls?)
@@ -54,6 +55,7 @@
             (and
              ;; TODO: use contracts
              (not (nothing? action))
+             (not (procedure? action))
              (maybe-execute-cmd action)))])
     (cons run-time (extract-times (get-output-bytes out)))))
 

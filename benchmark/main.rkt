@@ -24,6 +24,7 @@
          record-results
          (struct-out bench-results)
          (struct-out linux-bench-results)
+         racket-time-extract-result
          linux-time-extract-result
          attach-linux-info
          attach-time
