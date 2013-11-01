@@ -1,7 +1,5 @@
 #lang scribble/manual
 
-Benchmark is provided as a library.
-
 @(require (for-label racket plot racket/set) scribble/eval)
 
 @title[#:tag "top"]{Benchmark}
@@ -14,7 +12,7 @@ benchmarks for comparing alternatives. In the simplest case, only the
 expressions to be evaluated must be specified. At the same time,
 control over gc, number of iterations, what precisely is timed,
 etc. are exposed in case additional configuration is
-desired. Currently this library is in a alpha state.
+desired.
 
 @table-of-contents[]
 
@@ -31,15 +29,13 @@ benchmarking Racket's @(racket sleep).
  ;; format benchmark name
  (define (fmt n) (format "sleep ~a" n))
 
- ;; sleep-internal-bench : num? -> benchmark-one?
- (define (sleep-internal-bench n) (bench-one (fmt n) (sleep n)))
-
- ;; times : (listof num?)
+ ;; times : (listof (>=/c 0))
  ;; times to sleep for
  (define times (list .1 .2 .3))
 
  ;; benches : (listof benchmark-one?)
- (define benches (map sleep-internal-bench times))
+ (define benches
+   (map (lambda (n) (bench-one (fmt n) (sleep n))) times))
 
  ;; ;; results : (listof benchmark-result?)
  ;; (define results (run-benchmarks benches
@@ -53,8 +49,33 @@ benchmarking Racket's @(racket sleep).
  ;;             (render-benchmark-alts (map fmt times) (fmt (car times)) results)))
  )
 
-The normalized times of the benchmarks compare as we expect. The rest
-of the document is structured as a reference.
+This illustrates a few features of this library.
+
+The first is @(racket bench-one). We specify a @(racket
+string?) (@(racket fmt n)) for the name of the benchmark and an
+expression @(racket (sleep n)) for the expression to benchmark.
+
+Second, we run the list of @(racket benchmark-one?) that we created,
+using @(racket run-benchmarks), additionally supplying options for the
+number of iterations per trial and the number of trials.  @(racket
+#:itrs-per-trial) tells us the number of times to evaluate the
+expression. In this case, we only need to evaluate @(racket (sleep n))
+once. But for an expression such as @(racket (+ 2 3)), because the
+time to evaluate is so small relative to timer resolution
+@(racket (time (+ 2 3))) would report that it took 0 ms to
+evaluate. Hence, we may instead want to see how long it takes to
+evaluate @(racket (time (for ([i 100000]) (+ 2 3)))). In this case,
+@(racket 100000) is our @(racket #:itrs-per-trial). The other option,
+@(racket #:num-trials) represents the number of samples to gather. In
+our case we use @(racket 30) so that we can use the normal
+distribution to compute confidence intervals.
+
+Third, we use @(racket render-benchmark-alts) to take the results that
+we got from @(racket run-benchmraks) to comparisons of the individual
+benchmarks.
+
+And as we see, the normalized times of the benchmarks compare as we
+expect.
 
 @section[#:tag "single benchmark"]{Individual Benchmarks}
 
@@ -88,7 +109,7 @@ specifying how to run a benchmark.
            (bench-one expr))]{
 The @(racket bench-one) macro is merely a wrapper for @(racket
 mk-bench-one) to admit raw expressions where thunks are required in
-@(racket mk-bench-one) and to derivce a name from the expression if no
+@(racket mk-bench-one) and to derive a name from the expression if no
 name is given.
 }
 
@@ -112,26 +133,21 @@ Using the examples from @(racket mk-bench-one):
 
 @defproc[(mk-shell-bench
           [name string?]
-          [run (or/c procedure? string-no-nuls? bytes-no-nuls?)]
-          [configure (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
-          [build (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+          [run (or/c string-no-nuls? bytes-no-nuls?)]
+          [configure (or/c nothing? procedure? string-no-nuls? bytes-no-nuls?) nothing]
+          [build (or/c nothing? procedure? string-no-nuls? bytes-no-nuls?) nothing]
           [extract-result (-> bytes? benchmark-trial-time?) racket-time-extract-result]
-          [clean (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+          [clean (or/c nothing? procedure? string-no-nuls? bytes-no-nuls?) nothing]
           [opts benchmark-opts? (mk-bench-opts #:itrs-per-trial 1
                                                #:manual-report-time #t)])
          benchmark-one?]{
 
-                         
 Produces a @(racket benchmark-one?) with associated @(racket name) for
-evaluating the time reported to evaluate @(racket (run)) if
-@(racket run) is a @(racket procedure?) or @(racket (system run))
-otherwise.
+evaluating the time reported to evaluate @(racket (system run)).
 
 Time must be reported by @(racket run) via stdout so that
 that @(racket extract-result) can produce a @(racket
-benchmark-trial-time?), hence @(racket #:manual-report-time #t). Note:
-@(racket racket-time-extract-result) parses the output of Racket's
-@(racket time).
+benchmark-trial-time?), hence @(racket #:manual-report-time #t).
 
 Additionally, because @(racket run) is expected to report its
 time, the default @(racket benchmark-opts?) used has @(racket
@@ -140,6 +156,13 @@ reported by @(racket run). In contrast, the default @(racket
 #:itrs-per-trial 500) for @(racket mk-bench-one) is meant to
 evaluate the thunk enough times so to minimize noise due to
 clock tick resolution.
+}
+
+@defproc[(racket-time-extract-result [str bytes?])
+         benchmark-trial-time?]{
+To be used with @(racket #:extract-result) for the output of
+Racket's @(racket time). Note: this is the default for the
+@(racket #:extract-result) argument of @(racket mk-shell-benchmark).
 }
 
 @defproc[(linux-time-extract-result [str bytes?])
@@ -177,7 +200,7 @@ that has the following contents:
 (examples
  (require benchmark)
 
- ;; run a.rkt using default for #:extract-result
+ ;; run 'racket a.rkt' using default for #:extract-result
  (mk-shell-bench
   "a.rkt"        ;; name of benchmark
   "racket a.rkt" ;; command to run using system
@@ -186,8 +209,8 @@ that has the following contents:
  ;; use /usr/bin/time to benchmark /bin/sleep
  ;; specifying linux-time-extract-result to extract time from stdout
  (mk-shell-bench
-  (format "sleep ~a" n)
-  (format "( /usr/bin/time -p sleep 5 ) 2>&1" n)
+  "/bin/sleep 5"
+  "( /usr/bin/time -p sleep 5 ) 2>&1"
   #:extract-result linux-time-extract-result))
 
 @defstruct[benchmark-trial-time? ([cpu real?]
@@ -207,7 +230,25 @@ exposed to allow the user to write her own @(racket #:extract-time).
 Creates a @(racket benchmark-group?) with specified @(racket name)
 for specified @(racket benchmarks). If @(racket opts) is not specified,
 @(racket (mk-bench-opts)) is used, otherwise the user-specified options
-are used.
+are used. Groups serve two purposes: to recursively give names to
+benchmarks and groups of benchmarks, and to allow convenient specification
+of options for multiple benchmarks.
+
+@#reader scribble/comment-reader
+(examples
+ (require benchmark)
+ 
+ (define (fib n)
+   (if (> 2 n) n (+ (fib (- n 1)) (fib (- n 2)))))
+
+ (define benches
+   (mk-bench-group
+    "fibs" ;; group name
+    (map
+     (lambda (i) (bench-one (format "~a" i) (fib i)))
+     (for/list ([i (in-range 25 30)]) i)) ;; (listof benchmark-one?)
+    ))
+ )
 
 @section[#:tag "benchmark options"]{Options for Running Benchmarks}
 @defproc[(mk-bench-opts [#:name name string? ""]
@@ -217,23 +258,23 @@ are used.
                         [#:discard-first discard-first (or/c boolean? nothing?) nothing]
                         [#:manual-report-time manual-report-time (or/c boolean? nothing?) nothing])
          benchmark-opts?]{
-    Produces @(racket (benchmark-opts?)) used for configuring how benchmarks,
-    at the @(racket benchmark-group?) @(racket benchmark-one?) or top-level are
-    run.
-    }
-
-@subsection[#:tag "combining benchmark options"]{Combining Benchmark Options}
-All fields of options, with the exception of @(racket #:name), combine in the
-following way: given @(racket o1) and @(racket o2) of type
-@(racket benchmark-opts?)
+Produces @(racket (benchmark-opts?)) used for configuring how benchmarks
+at the @(racket benchmark-group?), @(racket benchmark-one?), or top-level are
+run.
+}
 
 @subsection[#:tag "name"]{Name}
-The keyword argument @(racket #:name) is used for naming @(racket benchmark-one?) and
-@(racket benchmark-one?). Names for @(racket benchmark-one?) can
-be thought of as file names and names for @(racket benchmark-group?)
-can be thought of as directory names. When a @(racket benchmark-one?)
-is run, the name associated with the results is analogous to an
-absolute path.
+This option should not be manpiluated, as it is set by @(racket
+bench-one), @(racket mk-bench-one), and @(racket mk-bench-group). The
+purpose in its documentation here is to help understand how the
+results of running benchmarks are named.
+
+The keyword argument @(racket #:name) is used for naming @(racket
+benchmark-one?) and @(racket benchmark-group?). Names for @(racket
+benchmark-one?) can be thought of as file names and names for @(racket
+benchmark-group?)  can be thought of as directory names. When a
+@(racket benchmark-one?)  is run, the name associated with the results
+is analogous to an absolute path.
 
 @subsection[#:tag "gc-between"]{GC Between}
 The keyword argument @(racket #:gc-between) specifies whether gc should be
@@ -257,12 +298,30 @@ due to initialization.
 
 @subsection[#:tag "manual-report-time"]{Manually Reporting Time}
 ;; TODO: update to reflect new name and semantics
-The two forms of timing suppored at "internal" and "external". External timing
-is the default, and is the end-to-end time to evaluate a thunk using
-@(racket time-apply). On the other hand, a consumer of this library may
-want additional control over what precisely is being timed. When
-@(racket #:manual-report-time) is set to @(racket #t), the consumer may use
-@(racket time-internal) to indicate the trial time.
+
+By default, timing is performed using @(racket time-apply) and not the
+responsibility of the consumer of this library. However, a consumer
+may want additional control over what is being timed. When @(racket
+#:manual-report-time) is set to @(racket #t), @(racket time-internal)
+should be used to indicate the trial time. This is the mechanism used
+for reporting times of shell benchmarks.
+
+@section[#:tag "combining benchmarks"]{Combining Benchmarks and Their Options}
+
+Benchmarks form a tree where @(racket benchmark-group?) are internal
+nodes and @(racket benchmark-one?) are leafs. Both of these nodes have
+@(racket benchmark-opts?) attached. For any node (internal or leaf) in
+the tree, field @(racket f) of @(racket benchmark-opts?) is the value
+of the @(racket f) for the @(racket benchmark-opts?) of that node if
+it is not @(racket nothing?). Otherwise, the value for field @(racket
+f) is inhereted from the parent node. The process is bootstrapped by
+filling in fields with @(racket nothing?) values in the @(racket
+benchmark-opts?)  of the root node with the defaults of @(racket
+opts-default) prior to calling @(racket run-benchmarks).
+
+@#reader scribble/comment-reader
+(examples
+ )
 
 @section[#:tag "running benchmarks"]{Runing Benchmarks}
 @defproc[(run-benchmarks [benchmarks (or/c benchmark-one? benchmark-group? (listof (or/c benchmark-one? benchmark-group?)))]
