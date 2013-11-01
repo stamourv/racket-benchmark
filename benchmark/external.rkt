@@ -51,10 +51,10 @@
          [run-time
           (parameterize
               ([current-output-port out])
-            (time-delta
-             (thunk
-               (unless (system action)
-                 (error (format "Failed running ~a" action))))))])
+            (and
+             ;; TODO: use contracts
+             (not (nothing? action))
+             (maybe-execute-cmd action)))])
     (cons run-time (extract-times (get-output-bytes out)))))
 
 ;; time-delta : procedure? -> real?
