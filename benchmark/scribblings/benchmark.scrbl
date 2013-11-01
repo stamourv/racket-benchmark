@@ -2,9 +2,10 @@
 
 @(require (for-label racket plot racket/set) scribble/eval)
 
-@title{Benchmark}
+@title[#:tag "top"]{Benchmarking}
+@author{@(author+email "Josh McGrath" "mcgrathj@ccs.neu.edu")}
 
-@section[#:tag "overview"]{Overview}
+@defmodule[benchmark]
 
 The goal of the benchmark library is to reduce the effort of writing
 benchmarks for comparing alternatives. In the simplest case, only names
@@ -13,94 +14,184 @@ must be specified. At the same time, control over gc, number of times run,
 what precisely is timed, are exposed in case additional configuration is
 required. Currently this library is in a pre-alpha state.
 
+@table-of-contents[]
+
 @section[#:tag "simple example"]{A Simple Example}
-Suppose we have implemented sets using a list as our underlying data structure.
-An obvious question is how its performance compares to racket's implementation
-@racket[set]. For now we decide to focus our effors on the membership function.
+To gain some confidence in our benchmarking framework, let's begin by
+benchmarking Racket's 
 
 @#reader scribble/comment-reader
 
-@examples[
-(require benchmark   ;; for specifying our benchmarks
-         plot        ;; for plotting results
-         racket/set) ;; racket set implementation
+(examples
+ (require plot benchmark)
+ 
+ ;; fmt : num? -> string?
+ ;; format benchmark name
+ (define (fmt n) (format "sleep ~a" n))
 
-;; specifying the sets we will query
+ ;; sleep-internal-bench : num? -> benchmark-one?
+ (define (sleep-internal-bench n) (bench-one (fmt n) (sleep n)))
 
-(define list-sizes (list 10 100 1000))
+ ;; times : (listof num?)
+ ;; times to sleep for
+ (define times (list .1 .2 .3))
 
-(define unfiltered-samples
-  (for/list ([i list-sizes]) (for/list ([j i]) j)))
+ ;; benches : (listof benchmark-one?)
+ (define benches (map sleep-internal-bench times))
 
-;; our sample lists contain the even values of unfiltered-samples
-(define sample-lists
-  (map (lambda (l) (filter even? l)) unfiltered-samples))
+ ;; results : (listof benchmark-result?)
+ ;; (define results (run-benchmarks benches
+ ;;                                 (mk-bench-opts
+ ;;                                  #:itrs-per-trial 1
+ ;;                                  #:num-trials 30)))
 
-;; make sets from sample-lists
-(define sample-sets
-  (for/list ([l sample-lists]) (list->set l)))
+ ;; record results in a file
+ 
+ ;; plot results
+ ;; (parameterize ([plot-x-ticks no-ticks])
+ ;;  (plot-pict #:x-label #f #:y-label "normalized time"
+ ;;             (render-benchmark-alts (map fmt times) (fmt (car times)) results)))
+ )
 
-(define moduli (list 12 17 39))
-(define (divides m n) (= 0 (modulo n m)))
-(define (interesting m)
-  (ormap (lambda (n) (divides n m)) moduli))
+Phew! The rest of the document is structured as a reference for the
+identifiers exposed.
 
-;; sample values are values from the sets divisible by one of our moduli
-(define sample-vals
-  (map (lambda (l) (filter interesting l)) sample-lists))
+@section[#:tag "single benchmark"]{Individual Benchmarks}
 
-;; benchmark lookup-fn querying set for each of vals
-(define (mk-bench lookup-fn set vals set-count)
-  (b1
-   ;; name of this benchmark
-   (format "lookup ~a of ~a vals" (length vals) set-count)
-   ;; expression to benchmark
-   (map (lambda (v) (lookup-fn set v)) vals)))
+@defproc[(mk-bench-one [name string?]
+                       [thunk procedure?]
+                       [opts benchmark-opts? (mk-bench-opts)])
+                       benchmark-one?]{
+    Produces a @(racket benchmark-one?) with associated @(racket name) for
+    computing the time to evaluate @(racket thunk)
+    @(racket (benchmark-opts itrs-per-trial)) times with specified
+    @(racket opts).
+    }
 
-(define benches
-  (bgroup       ;; a top-level group for combining our list set
-                ;; implementation and the racket set implementation
-   ""
-   (list
-    (bgroup
-     "list set" ;; name of this group
-     ;; list of benchmark-one? in this group (one per element of sample-lists)
-     (map (lambda (set vals)
-            (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
-          sample-lists
-          sample-vals))
-    (bgroup
-     "racket set" ;; name of this group
-     ;; list of benchmark-one? in this group (one per element of sample-sets)
-     (map (lambda (set vals)
-            (mk-bench set-member? set vals (set-count set)))
-          sample-sets
-          sample-vals)))))
+@defproc[(mk-shell-bench [name string?]
+                         [run (or/c procedure? string-no-nuls? bytes-no-nuls?)]
+                         [configure (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+                         [build (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+                         [extract-result (-> bytes? benchmark-trial-time?) default-extract-result]
+                         [clean (or/c procedure? string-no-nuls? bytes-no-nuls?) nothing]
+                         [opts benchmark-opts? (mk-bench-opts #:itrs-per-trial 1
+                                                      #:time-external #f)])
+         benchmark-one?]{
+    Produces a @(racket benchmark-one?) with associated @(racket name) for
+    the time @bold{reported} to evaluate @(racket (run)) if @(racket run) is a
+    @(racket procedure?) or @(racket (system run)) otherwise. Time must be
+    reported by @(racket run) via stdout in such a way that @(racket extract-result)
+    can produce a @(racket benchmark-trial-time?). Because @(racket run) is
+    expected to report its time, the default @(racket bench-opts?) used
+    has @(racket #:itrs-per-trial 1). That is, the trial reported by
+    @(racket run) is precisely the time for that trial. In contrast, the default
+    @(racket #:itrs-per-trial 500) for @(racket mk-bench-one)
+    evaluates the thunk enough times so to minimize noise due to clock
+    tick resolution.}
 
-(define results
-  (run-benchmarks
-   benches                      ;; benchmarks to run
-   (bopts
-    ;; don't run gc between each iteration (because it takes a long time
-    ;; to build the document when gc runs)
-    #:gc-between #f
-    ;; number of iterations to time. i.e. time how long 100 iterations
-    #:itrs-per-trial 100
-    ;; number of trials to run. i.e. we make 50 measurements of rounds of
-    ;; running 100 benchmraks
-    #:num-trials 50)))
+@defform*[((bench-one name expr opts)
+                    (bench-one name expr)
+                    (bench-one expr))]{
+    Produces a @(racket benchmark-one?) for the supplied @(racket expr).
+    If @(racket name) is not provided, the string form of @(racket expr) is
+    used as the name. If @(racket name) is provided, it is expected to be a
+    string. If @(racket opts) is not provided,
+    @(racket (mk-bench-opts is used)). If @(racket opts) is provided, it is
+    expected to have type @(racket benchmark-opts?).
+    }
 
-;; plot the results
-(parameterize ([plot-x-ticks no-ticks])
-  (plot-pict
-   #:title "sets"
-   #:y-label "normalized time"
-   #:x-label #f
-   (render-benchmark-alts
-    ;; list of alternatives to compare. here we want to compare the
-    ;; racket set and list set groups.
-    (list "racket set" "list set")
-    results                        ;; benchmark results
-    "racket set"                   ;; alternative to use as our baseline
-    )))
-]
+@section[#:tag "grouping benchmarks"]{Groups of Benchmarks}
+@defproc[(mk-bench-group [name string?]
+                                              [benchmarks (listof (or/c benchmark-one? benchmark-group?))]
+                                              [opts benchmark-opts? (mk-bench-opts)])
+         benchmark-group?]{}
+
+Creates a @(racket benchmark-group?) with specified @(racket name)
+for specified @(racket benchmarks). If @(racket opts) is not specified,
+@(racket (mk-bench-opts)) is used, otherwise the user-specified options
+are used.
+
+@section[#:tag "benchmark options"]{Options for Running Benchmarks}
+@defproc[(mk-bench-opts [#:name name string? ""]
+                        [#:gc-between gc-between (or/c boolean? nothing?) nothing]
+                        [#:num-trials num-trials (or/c exact-integer? nothing?) nothing]
+                        [#:itrs-per-trial itrs-per-trial(or/c exact-integer? nothing?) nothing]
+                        [#:discard-first discard-first (or/c boolean? nothing?) nothing]
+                        [#:time-external time-external (or/c boolean? nothing?) nothing])
+         benchmark-opts?]{
+    Produces @(racket (benchmark-opts?)) used for configuring how benchmarks,
+    at the @(racket benchmark-group?) @(racket benchmark-one?) or top-level are
+    run.
+    }
+
+@subsection[#:tag "combining benchmark options"]{Combining Benchmark Options}
+All fields of options, with the exception of @(racket #:name), combine in the
+following way: given @(racket o1) and @(racket o2) of type
+@(racket benchmark-opts?)
+
+@subsection[#:tag "name"]{Name}
+The keyword argument @(racket #:name) is used for naming @(racket benchmark-one?) and
+@(racket benchmark-one?). Names for @(racket benchmark-one?) can
+be thought of as file names and names for @(racket benchmark-group?)
+can be thought of as directory names. When a @(racket benchmark-one?)
+is run, the name associated with the results is analogous to an
+absolute path.
+
+@subsection[#:tag "gc-between"]{GC Between}
+The keyword argument @(racket #:gc-between) specifies whether gc should be
+run before each trial for the associated benchmark. If true, the GC is envoked
+thrice before each trial, using @(racket (collect-garbage)).
+
+@subsection[#:tag "num-trials"]{Number of Trials}
+The keyword argument @(racket #:num-trials) specifies the number of trials
+(samples) to gather for evaluating the thunk being benchmarked.
+
+@subsection[#:tag "itrs-per-trial"]{Iterations per Trial}
+The keyword argument @(racket #:itrs-per-trial) specifies the number of
+times to evaluate the thunk during each trial. The purpose of this is to
+guarantee that the thunk is evaluated enough times so that clock tick resolution
+isn't significant.
+
+@subsection[#:tag "discard-first"]{Discard First}
+The keyword argument @(racket #:discard-first) determines whether the first
+trial time is discarded. The purpose for this is to mitigate additional overhead
+due to initialization.
+
+@subsection[#:tag "time-external"]{Time External}
+The two forms of timing suppored at "internal" and "external". External timing
+is the default, and is the end-to-end time to evaluate a thunk using
+@(racket time-apply). On the other hand, a consumer of this library may
+want additional control over what precisely is being timed. When
+@(racket #:time-external) is set to @(racket #f), the consumer may use
+@(racket time-internal) to indicate the trial time.
+
+@section[#:tag "running benchmarks"]{Runing Benchmarks}
+@defproc[(run-benchmarks [benchmarks (or/c benchmark-one? benchmark-group? (listof (or/c benchmark-one? benchmark-group?)))]
+                         [opts (or/c benchmark-opts? nothing?) nothing])
+         (listof benchmark-result?)]{}
+
+@section[#:tag "Benchmark Times"]{Benchmark Times}
+@defproc[(time-internal [thunk procedure?])
+          void?]{
+    When uesd with @(racket #:time-external #f) in @(racket benchmark-opts?),
+    reports the time required to evaluate @(racket (thunk)).
+
+@section[#:tag "Plotting"]{Plotting}
+@(racket benchmark) exports a @(racket renderer2d?) for plotting results
+of benchmarks.
+@defproc[(render-benchmark-alts [alt-names (listof string?)]
+                                [norm-alt-name string?]
+                                [benchmark-results (listof benchmark-result?)])
+         renderer2d?]{
+    Produces a @(racket renderer2d?) for the specified benchmark results with
+    error bars.
+    }
+
+@section [#:tag "Persisting Results"]{Persisting Results}
+Results can be persisted with @(racket record-results) and retrieved
+with @(racket get-past-results).
+
+@defproc[(record-results [results bench-results?]
+                         [file path?])
+         void?]
+
