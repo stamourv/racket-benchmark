@@ -1,0 +1,13 @@
+language: c
+
+env:
+ - RACKET_VERSION=5.3.6
+ - RACKET_VERSION=HEAD
+
+before_install:
+ - curl -L https://github.com/greghendershott/travis-racket/releases/download/v0.3/install-racket.sh | sh
+
+script:
+ - export PATH=/usr/racket/bin:$PATH
+ - cd benchmark/examples
+ - make -k -j 4 all
