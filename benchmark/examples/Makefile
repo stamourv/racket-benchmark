@@ -8,6 +8,7 @@ clean:
 	rm -f *.pdf
 
 %_test: %
+	raco make $* > /dev/null
 	racket $* > /dev/null
 	@echo "DONE RUNNING $*"
 
@@ -23,3 +24,7 @@ sanity:
 
 .PHONY: all
 all: tests optimization-coach
+
+.PHONY: clean
+clean:
+	find . -type d -name compiled -exec rm -rf {} \;
