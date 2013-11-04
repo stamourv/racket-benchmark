@@ -10,8 +10,8 @@
 
 (define benches
   (list
-   (bench-group "racket" (map (lambda (t) (sleep-internal-bench t)) times))
-   (bench-group
+   (mk-bench-group "racket" (map (lambda (t) (sleep-internal-bench t)) times))
+   (mk-bench-group
     "linux"
     (map (lambda (t) (sleep-external-bench t)) times))))
 

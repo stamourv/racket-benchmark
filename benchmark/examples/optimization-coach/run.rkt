@@ -3,7 +3,7 @@
 (require benchmark "common.rkt")
 
 (define (mk-optimization-group opt-type files)
-  (bench-group
+  (mk-bench-group
    opt-type
    (map
     (lambda (f)
