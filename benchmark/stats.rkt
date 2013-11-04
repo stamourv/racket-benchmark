@@ -180,6 +180,7 @@
   ;;   check that benchmarks are comparable, leveraging transitivity
   (if (benchmarks-comparable? norm-br br)
       (benchmark-result
+       (benchmark-result-name br)
        (benchmark-result-opts br)
        (raw-to-stats (map benchmark-trial-time
                           normd-cpu-samples

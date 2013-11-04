@@ -47,8 +47,7 @@
 ;; render-benchmark-alts : (listof string?) string? (listof benchmark-result?)
 ;;                         -> renderer2d?
 (define (render-benchmark-alts alt-names norm-alt-name brs)
-  (define (br-name br)
-    (benchmark-opts-name (benchmark-result-opts br)))
+  (define (br-name br) (benchmark-result-name br))
   ;; for comparing groups of benchmarks
   (define (select-benchmarks-group alt-name)
     (define (norm-list br-suff)
@@ -77,9 +76,7 @@
                        [trial-stats (benchmark-result-trial-stats br)])
                    (normalize-br
                     (norm-br new-name)
-                    (mk-bench-result
-                     (struct-copy benchmark-opts opts [name new-name])
-                     trial-stats)))
+                    (mk-bench-result (br-name br) opts trial-stats)))
                  #f))
            brs)])
       (if (null? normd-brs)
@@ -153,7 +150,7 @@
                     #:type-sel [type-sel benchmark-trial-stats-real])
   (define (data-point br)
     (let* ([opts (benchmark-result-opts br)]
-           [data-name (benchmark-opts-name opts)]
+           [data-name (benchmark-result-name br)]
            [mv (type-sel (benchmark-result-trial-stats br))]
            [mean (measured-value-mean mv)])
       (vector data-name mean)))

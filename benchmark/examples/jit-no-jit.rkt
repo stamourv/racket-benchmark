@@ -9,7 +9,7 @@
    "external/collatz1000.rkt"))
 
 (define (jit-no-jit jit)
-  (bench-group
+  (mk-bench-group
    (if jit "jit" "no jit")
    (map (lambda (f)
           (mk-racket-file-bench

@@ -16,39 +16,37 @@
 (define (append-opts o1 o2)
   (define (filter-nothing lst)
     (filter (lambda (x) (not (nothing? x))) lst))
-  (define (relname a b)
-    (if (equal? "" a) b (string-append a "/" b)))
-  (define (name-val o)
-    (if (or (nothing? o) (nothing? (benchmark-opts-name o)))
-        ""
-        (benchmark-opts-name o)))
   (define (opt-val fn)
     (let ([filtered-opts
            (filter-nothing (map fn (filter-nothing (list o2 o1))))])
       (if (null? filtered-opts)
           nothing
           (car filtered-opts))))
-  (let ([name (relname (name-val o1) (name-val o2))]
-        [gc (opt-val benchmark-opts-gc-between-each)]
+  (let ([gc (opt-val benchmark-opts-gc-between-each)]
         [trials (opt-val benchmark-opts-num-trials)]
         [itrs (opt-val benchmark-opts-itrs-per-trial)]
         [discard (opt-val benchmark-opts-discard-first)]
         [manual-report-time (opt-val benchmark-opts-manual-report-time)])
-    (benchmark-opts name gc trials itrs discard manual-report-time)))
+    (benchmark-opts gc trials itrs discard manual-report-time)))
+
+;; relname : string? string? -> string?
+(define (relname a b)
+  (if (equal? "" a) b (string-append a "/" b)))
 
 ;; append-default-opts : benchmark-opts? -> benchmark-opts?
 (define (append-default-opts o) (append-opts default-opts o))
 
 ;; run-benchmarks : (or/c benchmark-one? benchmark-group?)
 ;;                  -> (listof benchmark-result?)
-(define (run-benchmarks bs [opts nothing])
+(define (run-benchmarks bs [opts nothing] [group-name ""])
   ;; run a benchmark (benchmark-one? or benchmark-group?)
   ;; from benchmark-group? bs after combining options of
   ;; group with those optional opts
   (define (run-group-elem e)
     (run-benchmarks
      e
-     (append-opts opts (benchmark-group-opts bs))))
+     (append-opts opts (benchmark-group-opts bs))
+     (relname group-name (benchmark-group-name bs))))
   ;; run a benchmark-one?
   (define (run-one b)
     (let*
@@ -58,6 +56,7 @@
            (append-opts
             opts
             (benchmark-one-opts b)))]
+         [final-name (relname group-name (benchmark-one-name b))]
          [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)]
          [adjusted-num-trials
           (if (benchmark-opts-discard-first final-opts)
@@ -65,7 +64,7 @@
               (benchmark-opts-num-trials final-opts))])
       (displayln
        (format "Running benchmark: ~a, ~a trials, ~a runs per trial"
-               (benchmark-opts-name final-opts)
+               final-name
                (benchmark-opts-num-trials final-opts)
                (benchmark-opts-itrs-per-trial final-opts)))
       (let*
@@ -97,12 +96,12 @@
                 times)]
            [stats (raw-to-stats trimmed-times)])
         (print-times (raw-to-stats trimmed-times))
-        (mk-bench-result final-opts stats))))
+        (mk-bench-result final-name final-opts stats))))
   (cond
    [(benchmark-group? bs)
     (append-map run-group-elem (benchmark-group-benchmarks bs))]
    [(benchmark-one? bs) (list (run-one bs))]
-   [(list? bs) (append-map (lambda (b) (run-benchmarks b opts)) bs)]
+   [(list? bs) (append-map (lambda (b) (run-benchmarks b opts group-name)) bs)]
    [else
     (raise-argument-error
      'run-benchmarks

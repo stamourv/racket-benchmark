@@ -4,14 +4,14 @@
 
 (define benches
   (list
-   (bench-group "A" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "B" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "C" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "D" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "E" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "F" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "G" (list (bench-one "1" (sleep 0.01))))
-   (bench-group "H" (list (bench-one "1" (sleep 0.01))))))
+   (mk-bench-group "A" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "B" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "C" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "D" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "E" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "F" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "G" (list (bench-one "1" (sleep 0.01))))
+   (mk-bench-group "H" (list (bench-one "1" (sleep 0.01))))))
 
 (define results
   (run-benchmarks
