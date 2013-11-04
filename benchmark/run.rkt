@@ -28,7 +28,7 @@
       (if (null? filtered-opts)
           nothing
           (car filtered-opts))))
-  (let ([name (relname (name-val o2) (name-val o1))]
+  (let ([name (relname (name-val o1) (name-val o2))]
         [gc (opt-val benchmark-opts-gc-between-each)]
         [trials (opt-val benchmark-opts-num-trials)]
         [itrs (opt-val benchmark-opts-itrs-per-trial)]
