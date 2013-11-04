@@ -56,7 +56,7 @@
 
 ;; m-command-or-proc : (or/c command procedure? nothing)
 
-(struct shell-benchmark benchmark-one
+(struct shell-benchmark
   (configure        ;; m-command-or-proc
    build            ;; m-command-or-proc
    run              ;; m-command-or-proc

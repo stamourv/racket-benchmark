@@ -85,8 +85,6 @@
    name
    (report-time (time-shell-cmd
                  (shell-benchmark
-                  nothing
-                  opts
                   configure
                   build
                   run
