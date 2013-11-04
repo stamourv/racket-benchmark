@@ -9,6 +9,6 @@ before_install:
 
 script:
  - export PATH=/usr/racket/bin:$PATH
- - raco pkg install --link ../benchmark
+ - raco pkg install -n benchmark --link ../racket-benchmark
  - cd benchmark/examples
  - make -k -j 4 all
