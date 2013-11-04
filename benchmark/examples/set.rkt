@@ -68,8 +68,8 @@
    #:x-label "list size/num queries"
    (render-benchmark-alts
     ;; list of alternatives to compare. here we want to compare the
-    ;; racket set and list set groups.
+    ;; racket set and list set groups.   
     (list "racket set" "list set")
-    results                        ;; benchmark results
     "racket set"                   ;; alternative to use as our baseline
+    results                        ;; benchmark results
     )))
