@@ -3,16 +3,10 @@ IGNORE=examples/external optimization-coach/oc-external \#
 SOURCE_FILES=$(shell find $(SOURCE_DIR) -name '*.rkt' -o -name '*.scrbl' | \
 				grep -v "$(shell echo '$(IGNORE)' | sed 's/ /\\|/g')")
 
-5.3.6_DEPS=base $(HEAD_DEPS)
-HEAD_DEPS=math-lib plot-gui-lib plot-lib srfi-lite-lib typed-racket-lib
-
 NUM_JOBS?=8
 
-%_link_install: %_deps
-	raco pkg install -n benchmark --link .
-
-%_deps:
-	raco pkg install $($*_DEPS)
+link_install:
+	raco pkg install --deps force -n benchmark --link .
 
 .PHONY: tests
 tests:
