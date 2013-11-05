@@ -9,7 +9,5 @@ before_install:
 
 script:
  - export PATH=/usr/racket/bin:$PATH
- - raco pkg install base math-lib plot-gui-lib plot-lib srfi-lite-lib typed-racket-lib
- - raco pkg install -n benchmark --link ../racket-benchmark
- - cd benchmark/examples
- - make -k -j 4 tests
+ - make ${RACKET_VERSION}_link_install
+ - make tests
