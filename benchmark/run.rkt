@@ -9,8 +9,7 @@
 (require math/statistics)
 
 (provide append-opts
-         run-benchmarks
-         default-opts)
+         run-benchmarks)
 
 ;; append-opts : benchmark-opts? benchmark-opts? -> benchmark-opts?
 (define (append-opts o1 o2)
@@ -22,7 +21,7 @@
       (if (null? filtered-opts)
           nothing
           (car filtered-opts))))
-  (let ([gc (opt-val benchmark-opts-gc-between-each)]
+  (let ([gc (opt-val benchmark-opts-gc-between)]
         [trials (opt-val benchmark-opts-num-trials)]
         [itrs (opt-val benchmark-opts-itrs-per-trial)]
         [discard (opt-val benchmark-opts-discard-first)]
@@ -32,9 +31,6 @@
 ;; relname : string? string? -> string?
 (define (relname a b)
   (if (equal? "" a) b (string-append a "/" b)))
-
-;; append-default-opts : benchmark-opts? -> benchmark-opts?
-(define (append-default-opts o) (append-opts default-opts o))
 
 ;; run-benchmarks : (or/c benchmark-one? benchmark-group?)
 ;;                  -> (listof benchmark-result?)
@@ -52,10 +48,9 @@
     (let*
         ;; compute final options, filling in with default values as needed
         ([final-opts
-          (append-default-opts
-           (append-opts
-            opts
-            (benchmark-one-opts b)))]
+          (append-opts
+           opts
+           (benchmark-one-opts b))]
          [final-name (relname group-name (benchmark-one-name b))]
          [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)]
          [adjusted-num-trials
@@ -72,7 +67,7 @@
             ;; for each trial
             (for/list ([i adjusted-num-trials])
               (begin
-                (when (benchmark-opts-gc-between-each final-opts)
+                (when (benchmark-opts-gc-between final-opts)
                   (collect-garbage)
                   (collect-garbage)
                   (collect-garbage))
@@ -107,4 +102,3 @@
      'run-benchmarks
      "(or/c benchmark-one? benchmark-group?)"
      bs)]))
-

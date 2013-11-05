@@ -14,7 +14,11 @@
          mk-shell-bench
          mk-racket-file-bench
          mk-bench-group
-         mk-bench-opts
+         gc-between
+         num-trials
+         itrs-per-trial
+         discard-first
+         manual-report-time
          run-benchmarks
          time-internal
          benchmark-trial-time
@@ -28,4 +32,3 @@
          attach-linux-info
          attach-time
          min-samples)
-

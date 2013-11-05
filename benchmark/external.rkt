@@ -78,19 +78,31 @@
          [extract-result
           racket-time-extract-result] ;; (bytes? -> benchmark-trial-time?)
          #:clean [clean nothing]                 ;; m-command-or-proc
-         #:opts [opts (mk-bench-opts
-                       #:itrs-per-trial 1
-                       #:manual-report-time #t)])     ;; benchmark-opts?
-  (bench-one
+         #:gc-between [gc-between (gc-between)]            ;; boolean?
+         #:num-trials [num-trials (num-trials)]             ;; exact-integer?
+         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
+         #:discard-first [discard-first (discard-first)]    ;; boolean?
+         #:manual-report-time
+         [manual-report-time (manual-report-time)]          ;; boolean?
+         #:opts [opts (benchmark-opts
+                       gc-between
+                       num-trials
+                       itrs-per-trial
+                       discard-first
+                       manual-report-time)])
+  (mk-bench-one
    name
-   (report-time (time-shell-cmd
-                 (shell-benchmark
-                  configure
-                  build
-                  run
-                  extract-result
-                  clean)))
-   opts))
+   (thunk
+    (report-time (time-shell-cmd
+                  (shell-benchmark
+                   configure
+                   build
+                   run
+                   extract-result
+                   clean))))
+   #:opts (struct-copy benchmark-opts opts
+                       [itrs-per-trial 1]
+                       [manual-report-time #t])))
 
 ;; mk-racket-file-bench : string? string? (listof string?) -> benchmark-one?
 (define (mk-racket-file-bench
@@ -103,9 +115,18 @@
          [extract-result
           racket-time-extract-result]             ;; (bytes-> benchmark-trial-time?)
          #:clean [clean nothing]              ;; m-command-or-proc
-         #:opts [opts (mk-bench-opts
-                       #:itrs-per-trial 1
-                       #:manual-report-time #t)])  ;; benchmark-opts?
+         #:gc-between [gc-between (gc-between)]            ;; boolean?
+         #:num-trials [num-trials (num-trials)]             ;; exact-integer?
+         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
+         #:discard-first [discard-first (discard-first)]    ;; boolean?
+         #:manual-report-time
+         [manual-report-time (manual-report-time)]          ;; boolean?
+         #:opts [opts (benchmark-opts
+                       gc-between
+                       num-trials
+                       itrs-per-trial
+                       discard-first
+                       manual-report-time)])
   (mk-shell-bench
    name
    (intercalate-strings (cons "racket" (append args (list fname))) " ")

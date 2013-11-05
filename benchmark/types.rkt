@@ -13,8 +13,11 @@
          mk-bench-group
          ;; options
          (struct-out benchmark-opts)
-         mk-bench-opts
-         default-opts
+         gc-between
+         num-trials
+         itrs-per-trial
+         discard-first
+         manual-report-time
          ;; for representing unset fields in options
          nothing
          nothing?
@@ -41,17 +44,27 @@
 
 (define-syntax (bench-one stx)
   (syntax-parse stx
-    [(_ n:expr b:expr opts:expr)
-     #'(mk-bench-one n (thunk b) opts)]
     [(_ n:expr b:expr)
      #'(mk-bench-one n (thunk b))]
     [(_ b:expr)
      #'(mk-bench-one (format "~a" 'b) (thunk b))]))
 
 ;; mk-bench-one : string? procedure? -> benchmark-one?
-(define (mk-bench-one name thunk
-               [opts (mk-bench-opts)] ;; benchmark-opts?
-               )
+(define (mk-bench-one
+         name
+         thunk
+         #:gc-between [gc-between (gc-between)]            ;; boolean?
+         #:num-trials [num-trials (num-trials)]             ;; exact-integer?
+         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
+         #:discard-first [discard-first (discard-first)]    ;; boolean?
+         #:manual-report-time
+         [manual-report-time (manual-report-time)]          ;; boolean?
+         #:opts [opts (benchmark-opts
+                       gc-between
+                       num-trials
+                       itrs-per-trial
+                       discard-first
+                       manual-report-time)])
   (benchmark-one name thunk opts))
 
 ;; m-command-or-proc : (or/c command procedure? nothing)
@@ -75,31 +88,38 @@
   )
 
 ;; mk-bench-group : string? (listof benchmark-one?) -> benchmark-group?
-(define (mk-bench-group name benchmarks
-                   [opts (mk-bench-opts)] ;; benchmark-opts?
-                   )
+(define (mk-bench-group
+         name
+         benchmarks
+         #:gc-between [gc-between (gc-between)]            ;; boolean?
+         #:num-trials [num-trials (num-trials)]             ;; exact-integer?
+         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
+         #:discard-first [discard-first (discard-first)]    ;; boolean?
+         #:manual-report-time
+         [manual-report-time (manual-report-time)]          ;; boolean?
+         #:opts [opts (benchmark-opts
+                       gc-between
+                       num-trials
+                       itrs-per-trial
+                       discard-first
+                       manual-report-time)])
   (benchmark-group name benchmarks opts))
 
 (struct benchmark-opts
-  (gc-between-each ;; boolean?
-   num-trials      ;; exact-integer?
-   itrs-per-trial  ;; exact-integer?
-   discard-first   ;; boolean?
-   manual-report-time   ;; boolean?
+  (gc-between         ;; boolean?
+   num-trials         ;; exact-integer?
+   itrs-per-trial     ;; exact-integer?
+   discard-first      ;; boolean?
+   manual-report-time ;; boolean?
    )
   #:prefab
   )
 
-(define (mk-bench-opts
-         #:gc-between [gc-between nothing]                  ;; boolean?
-         #:num-trials [num-trials nothing]                  ;; exact-integer?
-         #:itrs-per-trial [itrs-per-trial nothing]          ;; exact-integer?
-         #:discard-first [discard-first nothing]            ;; boolean?
-         #:manual-report-time [manual-report-time nothing]) ;; boolean?
-  (benchmark-opts gc-between num-trials itrs-per-trial
-                  discard-first manual-report-time))
-
-(define default-opts (benchmark-opts #t 100 500 #t #f))
+(define gc-between (make-parameter #t))
+(define num-trials (make-parameter 100))
+(define itrs-per-trial (make-parameter 500))
+(define discard-first (make-parameter #t))
+(define manual-report-time (make-parameter #f))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Benchmark Results ;;;;;;;;;;;;;;;;;;;;;;;;;
 

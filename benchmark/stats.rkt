@@ -195,7 +195,7 @@
    (lambda (f) (equal?
                        (f (benchmark-result-opts br1))
                        (f (benchmark-result-opts br2))))
-   (list benchmark-opts-gc-between-each benchmark-opts-itrs-per-trial)))
+   (list benchmark-opts-gc-between benchmark-opts-itrs-per-trial)))
 
 (module+ test
   (test-confidence-interval)
