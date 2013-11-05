@@ -2,16 +2,12 @@ SOURCE_DIR=benchmark
 IGNORE=examples/external optimization-coach/oc-external \#
 SOURCE_FILES=$(shell find $(SOURCE_DIR) -name '*.rkt' -o -name '*.scrbl' | \
 				grep -v "$(shell echo '$(IGNORE)' | sed 's/ /\\|/g')")
-
+PWD=../$(shell basename $(shell pwd))
 NUM_JOBS?=8
 
-.PHONY: HEAD_link_install
-HEAD_link_install:
-	raco pkg install --deps force -n benchmark ./
-
-.PHONY: 5.3.6_link_install
-5.3.6_link_install:
-	raco pkg install --deps force -n benchmark --link .
+.PHONY: link_install
+link_install:
+	raco pkg install --deps force -n benchmark $(PWD)
 
 .PHONY: tests
 tests:
