@@ -9,5 +9,5 @@ before_install:
 
 script:
  - export PATH=/usr/racket/bin:$PATH
- - make link_install
+ - make ${RACKET_VERSION}_link_install
  - make tests

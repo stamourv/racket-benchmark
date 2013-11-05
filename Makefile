@@ -5,7 +5,12 @@ SOURCE_FILES=$(shell find $(SOURCE_DIR) -name '*.rkt' -o -name '*.scrbl' | \
 
 NUM_JOBS?=8
 
-link_install:
+.PHONY: HEAD_link_install
+HEAD_link_install:
+	raco pkg install --deps force -n benchmark ./
+
+.PHONY: 5.3.6_link_install
+5.3.6_link_install:
 	raco pkg install --deps force -n benchmark --link .
 
 .PHONY: tests
