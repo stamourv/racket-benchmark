@@ -7,17 +7,11 @@
   (mk-bench-group
    "fibs"
    (list (bench-one "fib 18" (fib 18))
-         (bench-one "fib 19" (fib 19)))))
+         (bench-one "fib 19" (fib 19)))
+   #:num-trials 30 #:gc-between #f))
 
 (define results-list
-  (map
-   (lambda (i)
-     (run-benchmarks
-      fib-group
-      (mk-bench-opts
-     #:num-trials 30
-     #:gc-between #f)))
-   (list 0 1 2)))
+  (map (lambda (i) (run-benchmarks fib-group)) (list 0 1 2)))
 
 (define file-1 "fake-record-results")
 (define file-2 "fake-record-RESULTS")

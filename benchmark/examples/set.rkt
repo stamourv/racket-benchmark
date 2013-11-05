@@ -31,34 +31,26 @@
    (map (lambda (v) (lookup-fn set v)) vals)))
 
 (define benches
-  (list
-   (mk-bench-group
-    "list set" ;; name of this group
-    ;; list of benchmark-one? in this group (one per element of sample-lists)
-    (map (lambda (set vals)
-           (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
-         sample-lists
-         sample-vals))
-   (mk-bench-group
-    "racket set" ;; name of this group
-    ;; list of benchmark-one? in this group (one per element of sample-sets)
-    (map (lambda (set vals)
-           (mk-bench set-member? set vals (set-count set)))
-         sample-sets
-         sample-vals))))
+  (parameterize ([gc-between #f]
+                 [itrs-per-trial 100]
+                 [num-trials 50])
+    (list
+     (mk-bench-group
+      "list set" ;; name of this group
+      ;; list of benchmark-one? in this group (one per element of sample-lists)
+      (map (lambda (set vals)
+             (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
+           sample-lists
+           sample-vals))
+     (mk-bench-group
+      "racket set" ;; name of this group
+      ;; list of benchmark-one? in this group (one per element of sample-sets)
+      (map (lambda (set vals)
+             (mk-bench set-member? set vals (set-count set)))
+           sample-sets
+           sample-vals)))))
 
-(define results
-  (run-benchmarks
-   benches                      ;; benchmarks to run
-   (mk-bench-opts
-    ;; don't run gc between each iteration (because it takes a long time
-    ;; to build the document when gc runs)
-    #:gc-between #f
-    ;; number of iterations to time. i.e. time how long 100 iterations
-    #:itrs-per-trial 100
-    ;; number of trials to run. i.e. we make 50 measurements of rounds of
-    ;; running 100 benchmraks
-    #:num-trials 50)))
+(define results (run-benchmarks benches))
 
 ;; plot the results
 (parameterize ([plot-x-ticks no-ticks])
@@ -68,7 +60,7 @@
    #:x-label "list size/num queries"
    (render-benchmark-alts
     ;; list of alternatives to compare. here we want to compare the
-    ;; racket set and list set groups.   
+    ;; racket set and list set groups.
     (list "racket set" "list set")
     "racket set"                   ;; alternative to use as our baseline
     results                        ;; benchmark results

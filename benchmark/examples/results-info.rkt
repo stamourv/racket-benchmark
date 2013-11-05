@@ -6,13 +6,10 @@
 (define fib-group
   (mk-bench-group
    "fibs" (list (bench-one "fib 18" (fib 18))
-                (bench-one "fib 19" (fib 19)))))
+                (bench-one "fib 19" (fib 19)))
+   #:num-trials 30 #:gc-between #f))
 
-(define results
-  (run-benchmarks fib-group
-                  (mk-bench-opts
-                   #:num-trials 30
-                   #:gc-between #f)))
+(define results (run-benchmarks fib-group))
 
 (define info+results (attach-linux-info results))
 

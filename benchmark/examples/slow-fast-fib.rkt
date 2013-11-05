@@ -25,21 +25,19 @@
 (define inputs (for/list ([i (in-range 30 35)]) i))
 
 (define benches
-  (list
-   (mk-bench-group
-    "slow (1 itr per trial)"
-    (map
-      (lambda (i) (bench-one (fmt i) (slow-fib i)))
-      inputs))
-   (mk-bench-group
-    "fast (10000 itrs per trial)"
-    (map
-     (lambda (i) (bench-one (fmt i) (fast-fib i)))
-     inputs)
-    (mk-bench-opts #:itrs-per-trial 10000))))
+  (parameterize ([gc-between #f])
+    (list
+     (mk-bench-group
+      "slow (1 itr per trial)"
+      (map
+       (lambda (i) (bench-one (fmt i) (slow-fib i)))
+       inputs)
+      #:itrs-per-trial 1)
+     (mk-bench-group
+      "fast (10000 itrs per trial)"
+      (map
+       (lambda (i) (bench-one (fmt i) (fast-fib i)))
+       inputs)
+      #:itrs-per-trial 10000))))
 
-(run-benchmarks
- benches
- (mk-bench-opts #:gc-between #f
-                #:itrs-per-trial 1))
-
+(run-benchmarks benches)

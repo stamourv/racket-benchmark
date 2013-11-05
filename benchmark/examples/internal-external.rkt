@@ -18,17 +18,17 @@
   (mk-bench-group
    "internals"
    (map (lambda (n) (mk-fib-bench n fib-internal)) fib-inputs)
-   (mk-bench-opts #:manual-report-time #t)))
+   #:manual-report-time #t
+   #:gc-between #f))
 
 (define fib-external-group
   (mk-bench-group
    "externals"
-   (map (lambda (m) (mk-fib-bench m fib)) fib-inputs)))
+   (map (lambda (m) (mk-fib-bench m fib)) fib-inputs)
+   #:gc-between #f))
 
 (define results
-  (run-benchmarks
-   (list fib-internal-group fib-external-group)
-   (mk-bench-opts #:gc-between #f)))
+  (run-benchmarks (list fib-internal-group fib-external-group)))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

@@ -9,16 +9,14 @@
 (define times (list .0001 .001 .01 .1 .5 1 1.3 1.67 2))
 
 (define benches
+  (parametize ([num-trials 30]
+               [gc-between #f]))
   (list
    (mk-bench-group "racket" (map (lambda (t) (sleep-internal-bench t)) times))
    (mk-bench-group
     "linux"
     (map (lambda (t) (sleep-external-bench t)) times))))
 
-(define results
-  (run-benchmarks benches
-                  (mk-bench-opts
-                   #:num-trials 30
-                   #:gc-between #f)))
+(define results (run-benchmarks benches))
 
 (record-results results results-file)

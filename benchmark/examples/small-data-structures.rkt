@@ -51,16 +51,15 @@
 (require plot benchmark (for-syntax benchmark))
 
 (define benches
-  (list
-   (bench-one "direct" (loop0 K))
-   (bench-one "cons" (loop1 K))
-   (bench-one "values" (loop2 K))
-   (bench-one "mcons" (loop3 K))))
+  (parameterize ([itrs-per-trial 1]
+                 [num-trials 30])
+    (list
+     (bench-one "direct" (loop0 K))
+     (bench-one "cons" (loop1 K))
+     (bench-one "values" (loop2 K))
+     (bench-one "mcons" (loop3 K)))))
 
-(define results
-  (run-benchmarks benches (mk-bench-opts
-                           #:itrs-per-trial 1
-                           #:num-trials 30)))
+(define results (run-benchmarks benches))
 
 (parameterize ([plot-x-ticks no-ticks])
   (plot-file

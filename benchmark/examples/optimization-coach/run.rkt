@@ -12,7 +12,8 @@
          f
          (format "racket ~a" f-path)
          #:configure (format "raco make ~a" f-path))))
-    files)))
+    files)
+   #:num-trials 30))
 
 (define benchmarks
   (map
@@ -20,6 +21,4 @@
      (mk-optimization-group (car otfs) (cdr otfs)))
    optimization-type-files))
 
-(record-results
- (run-benchmarks benchmarks (mk-bench-opts #:num-trials 30))
- results-file)
+(record-results (run-benchmarks benchmarks) results-file)

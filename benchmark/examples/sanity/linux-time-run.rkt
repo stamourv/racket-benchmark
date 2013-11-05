@@ -4,12 +4,14 @@
 
 (define sleep-times (list .25 .50 .75 1.0))
 
-(define benches (map sleep-external-bench sleep-times))
+(define benches
+  (parameterize ([num-trials 1]
+                 [gc-between #f])
+    (map sleep-external-bench sleep-times)))
 
 (define results
   (parameterize ([min-samples 1])
-      (run-benchmarks benches
-                  (mk-bench-opts #:num-trials 1 #:gc-between #f))))
+    (run-benchmarks benches)))
 
 (parameterize ([plot-x-ticks no-ticks]
                          [min-samples 1])

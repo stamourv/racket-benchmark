@@ -16,12 +16,11 @@
            (cadr (regexp-match #rx"([^.]+)\\.rkt" f))
            f
            (if jit (list) (list "-j"))))
-    files)))
+    files)
+   #:num-trials 30))
 
 (define results
-  (run-benchmarks
-   (list (jit-no-jit #t) (jit-no-jit #f))
-   (mk-bench-opts #:num-trials 30)))
+  (run-benchmarks (list (jit-no-jit #t) (jit-no-jit #f))))
 
 (record-results results "jit-no-jit.bench")
 
