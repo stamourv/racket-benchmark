@@ -12,4 +12,4 @@ script:
  - raco pkg install base math-lib plot-gui-lib plot-lib srfi-lite-lib typed-racket-lib
  - raco pkg install -n benchmark --link ../racket-benchmark
  - cd benchmark/examples
- - make -k -j 4 tests sanity
+ - make -k -j 4 tests
