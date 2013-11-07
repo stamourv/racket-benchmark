@@ -15,17 +15,23 @@
 (define fib-inputs (list 19 20 21))
 
 (define fib-internal-group
-  (mk-bench-group
-   "internals"
-   (map (lambda (n) (mk-fib-bench n fib-internal)) fib-inputs)
-   #:manual-report-time #t
-   #:gc-between #f))
+  (parameterize ([manual-report-time #t]
+                 [gc-between #f]
+                 [itrs-per-trial 1])
+    (mk-bench-group
+     "internals"
+     (map (lambda (n)
+            (mk-fib-bench n fib-internal)) fib-inputs))))
 
 (define fib-external-group
-  (mk-bench-group
-   "externals"
-   (map (lambda (m) (mk-fib-bench m fib)) fib-inputs)
-   #:gc-between #f))
+  (parameterize ([gc-between #f])
+    (mk-bench-group
+     "externals"
+     (map (lambda (m) (mk-fib-bench m fib)) fib-inputs))))
+
+;; note: can't do something like:
+;; (parameterize ([gc-between #f])
+;;   fib-external-group)
 
 (define results
   (run-benchmarks (list fib-internal-group fib-external-group)))

@@ -3,17 +3,17 @@
 (require benchmark "common.rkt")
 
 (define (mk-optimization-group opt-type files)
-  (mk-bench-group
-   opt-type
-   (map
-    (lambda (f)
-      (let ([f-path (format "oc-external/~a/~a" opt-type f)])
+  (parameterize ([num-trials 30])
+    (mk-bench-group
+     opt-type
+     (map
+      (lambda (f)
+        (let ([f-path (format "oc-external/~a/~a" opt-type f)])
         (mk-shell-bench
          f
          (format "racket ~a" f-path)
          #:configure (format "raco make ~a" f-path))))
-    files)
-   #:num-trials 30))
+      files))))
 
 (define benchmarks
   (map

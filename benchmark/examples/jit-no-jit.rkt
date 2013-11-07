@@ -9,15 +9,15 @@
    "external/collatz1000.rkt"))
 
 (define (jit-no-jit jit)
-  (mk-bench-group
-   (if jit "jit" "no jit")
-   (map (lambda (f)
-          (mk-racket-file-bench
-           (cadr (regexp-match #rx"([^.]+)\\.rkt" f))
-           f
-           (if jit (list) (list "-j"))))
-    files)
-   #:num-trials 30))
+  (parameterize ([num-trials 30])
+    (mk-bench-group
+     (if jit "jit" "no jit")
+     (map (lambda (f)
+            (mk-racket-file-bench
+             (cadr (regexp-match #rx"([^.]+)\\.rkt" f))
+             f
+             (if jit (list) (list "-j"))))
+          files))))
 
 (define results
   (run-benchmarks (list (jit-no-jit #t) (jit-no-jit #f))))
