@@ -7,7 +7,7 @@ NUM_JOBS?=8
 
 .PHONY: link_install
 link_install:
-	raco pkg install --auto -n benchmark $(PWD) || raco setup benchmark
+	raco pkg install --deps search-auto -n benchmark $(PWD) || raco setup benchmark
 
 .PHONY: tests
 tests:
