@@ -82,7 +82,6 @@
 (struct benchmark-group
   (name            ;; string?
    benchmarks      ;; (listof benchmark-one?)
-   opts            ;; benchmark-opts?
    )
   #:transparent
   )
@@ -90,20 +89,8 @@
 ;; mk-bench-group : string? (listof benchmark-one?) -> benchmark-group?
 (define (mk-bench-group
          name
-         benchmarks
-         #:gc-between [gc-between (gc-between)]            ;; boolean?
-         #:num-trials [num-trials (num-trials)]             ;; exact-integer?
-         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
-         #:discard-first [discard-first (discard-first)]    ;; boolean?
-         #:manual-report-time
-         [manual-report-time (manual-report-time)]          ;; boolean?
-         #:opts [opts (benchmark-opts
-                       gc-between
-                       num-trials
-                       itrs-per-trial
-                       discard-first
-                       manual-report-time)])
-  (benchmark-group name benchmarks opts))
+         benchmarks)
+  (benchmark-group name benchmarks))
 
 (struct benchmark-opts
   (gc-between         ;; boolean?

@@ -8,25 +8,7 @@
 
 (require math/statistics)
 
-(provide append-opts
-         run-benchmarks)
-
-;; append-opts : benchmark-opts? benchmark-opts? -> benchmark-opts?
-(define (append-opts o1 o2)
-  (define (filter-nothing lst)
-    (filter (lambda (x) (not (nothing? x))) lst))
-  (define (opt-val fn)
-    (let ([filtered-opts
-           (filter-nothing (map fn (filter-nothing (list o2 o1))))])
-      (if (null? filtered-opts)
-          nothing
-          (car filtered-opts))))
-  (let ([gc (opt-val benchmark-opts-gc-between)]
-        [trials (opt-val benchmark-opts-num-trials)]
-        [itrs (opt-val benchmark-opts-itrs-per-trial)]
-        [discard (opt-val benchmark-opts-discard-first)]
-        [manual-report-time (opt-val benchmark-opts-manual-report-time)])
-    (benchmark-opts gc trials itrs discard manual-report-time)))
+(provide run-benchmarks)
 
 ;; relname : string? string? -> string?
 (define (relname a b)
@@ -34,23 +16,19 @@
 
 ;; run-benchmarks : (or/c benchmark-one? benchmark-group?)
 ;;                  -> (listof benchmark-result?)
-(define (run-benchmarks bs [opts nothing] [group-name ""])
+(define (run-benchmarks bs [group-name ""])
   ;; run a benchmark (benchmark-one? or benchmark-group?)
   ;; from benchmark-group? bs after combining options of
   ;; group with those optional opts
   (define (run-group-elem e)
     (run-benchmarks
      e
-     (append-opts opts (benchmark-group-opts bs))
      (relname group-name (benchmark-group-name bs))))
   ;; run a benchmark-one?
   (define (run-one b)
     (let*
         ;; compute final options, filling in with default values as needed
-        ([final-opts
-          (append-opts
-           opts
-           (benchmark-one-opts b))]
+        ([final-opts (benchmark-one-opts b)]
          [final-name (relname group-name (benchmark-one-name b))]
          [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)]
          [adjusted-num-trials
@@ -96,7 +74,7 @@
    [(benchmark-group? bs)
     (append-map run-group-elem (benchmark-group-benchmarks bs))]
    [(benchmark-one? bs) (list (run-one bs))]
-   [(list? bs) (append-map (lambda (b) (run-benchmarks b opts group-name)) bs)]
+   [(list? bs) (append-map (lambda (b) (run-benchmarks b group-name)) bs)]
    [else
     (raise-argument-error
      'run-benchmarks
