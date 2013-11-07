@@ -4,7 +4,7 @@
 
 (define (sleep-internal-bench n)
   (bench-one (format "sleep ~a" n)
-             (sleep n) (mk-bench-opts #:itrs-per-trial 1)))
+             (sleep n) (make-bench-opts #:itrs-per-trial 1)))
 
 (define times (list .0001 .001 .01 .1 .5 1 1.3 1.67 2))
 
@@ -12,8 +12,8 @@
   (parametize ([num-trials 30]
                [gc-between #f]))
   (list
-   (mk-bench-group "racket" (map (lambda (t) (sleep-internal-bench t)) times))
-   (mk-bench-group
+   (make-bench-group "racket" (map (lambda (t) (sleep-internal-bench t)) times))
+   (make-bench-group
     "linux"
     (map (lambda (t) (sleep-external-bench t)) times))))
 

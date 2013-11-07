@@ -76,7 +76,7 @@
                        [trial-stats (benchmark-result-trial-stats br)])
                    (normalize-br
                     (norm-br new-name)
-                    (mk-bench-result (br-name br) opts trial-stats)))
+                    (make-bench-result (br-name br) opts trial-stats)))
                  #f))
            brs)])
       (if (null? normd-brs)

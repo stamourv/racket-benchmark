@@ -14,7 +14,7 @@
 
 ;; bench-results? path? -> void?
 (define (record-results results file)
-  (let ([fresh-name (mk-fresh-file-name file)])
+  (let ([fresh-name (make-fresh-file-name file)])
     ;; serialization is used as otherwise read (write date) /= date
     ;; in the equal? sense
     (write-to-file (serialize results)
@@ -48,9 +48,9 @@
 
 ;; string? [exact-integer?] -> string?
 ;; create a new fresh file name of the form file-base-<n>
-(define (mk-fresh-file-name file-base [version 0])
+(define (make-fresh-file-name file-base [version 0])
   (if (file-exists? (fmt file-base version))
-      (mk-fresh-file-name file-base (+ version 1))
+      (make-fresh-file-name file-base (+ version 1))
       (fmt file-base version)))
 
 ;; string? exact-integer? -> string?

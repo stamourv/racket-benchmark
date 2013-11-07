@@ -9,11 +9,11 @@
          "results.rkt"
          "run.rkt")
 
-(provide mk-bench-one
+(provide make-bench-one
          bench-one
-         mk-shell-bench
-         mk-racket-file-bench
-         mk-bench-group
+         make-shell-bench
+         make-racket-file-bench
+         make-bench-group
          gc-between
          num-trials
          itrs-per-trial

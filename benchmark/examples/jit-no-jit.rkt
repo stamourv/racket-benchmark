@@ -10,10 +10,10 @@
 
 (define (jit-no-jit jit)
   (parameterize ([num-trials 30])
-    (mk-bench-group
+    (make-bench-group
      (if jit "jit" "no jit")
      (map (lambda (f)
-            (mk-racket-file-bench
+            (make-racket-file-bench
              (cadr (regexp-match #rx"([^.]+)\\.rkt" f))
              f
              (if jit (list) (list "-j"))))

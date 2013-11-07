@@ -5,7 +5,7 @@
 (define ping-num-trials 5)
 
 (define (ping count)
-  (mk-shell-bench
+  (make-shell-bench
    "ping"
    (format "ping -c ~a ccs.neu.edu" count)
    #:extract-result extract-time
@@ -26,7 +26,7 @@
 
 (define benches
   (map
-   (lambda (n) (mk-bench-group (format "trial ~a" n) (list (ping 2))))
+   (lambda (n) (make-bench-group (format "trial ~a" n) (list (ping 2))))
    (for/list ([i (in-range 0 ping-num-trials)]) i)))
 
 (define results (run-benchmarks benches))

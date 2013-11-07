@@ -2,14 +2,14 @@
 
 (require benchmark "common.rkt")
 
-(define (mk-optimization-group opt-type files)
+(define (make-optimization-group opt-type files)
   (parameterize ([num-trials 30])
-    (mk-bench-group
+    (make-bench-group
      opt-type
      (map
       (lambda (f)
         (let ([f-path (format "oc-external/~a/~a" opt-type f)])
-        (mk-shell-bench
+        (make-shell-bench
          f
          (format "racket ~a" f-path)
          #:configure (format "raco make ~a" f-path))))
@@ -18,7 +18,7 @@
 (define benchmarks
   (map
    (lambda (otfs)
-     (mk-optimization-group (car otfs) (cdr otfs)))
+     (make-optimization-group (car otfs) (cdr otfs)))
    optimization-type-files))
 
 (record-results (run-benchmarks benchmarks) results-file)

@@ -6,17 +6,17 @@
   (parameterize ([gc-between #f]
                  [itrs-per-trial 10]
                  [num-trials 31])
-    (mk-bench-group
+    (make-bench-group
      ""
      (list
-      (mk-bench-group "A" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "B" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "C" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "D" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "E" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "F" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "G" (list (bench-one "1" (sleep 0.01))))
-      (mk-bench-group "H" (list (bench-one "1" (sleep 0.01))))))))
+      (make-bench-group "A" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "B" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "C" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "D" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "E" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "F" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "G" (list (bench-one "1" (sleep 0.01))))
+      (make-bench-group "H" (list (bench-one "1" (sleep 0.01))))))))
 
 (define results (run-benchmarks benches))
 

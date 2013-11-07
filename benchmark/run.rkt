@@ -69,7 +69,7 @@
                 times)]
            [stats (raw-to-stats trimmed-times)])
         (print-times (raw-to-stats trimmed-times))
-        (mk-bench-result final-name final-opts stats))))
+        (make-bench-result final-name final-opts stats))))
   (cond
    [(benchmark-group? bs)
     (append-map run-group-elem (benchmark-group-benchmarks bs))]

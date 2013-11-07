@@ -4,8 +4,8 @@
 (require racket/system)
 
 (provide
- mk-shell-bench
- mk-racket-file-bench
+ make-shell-bench
+ make-racket-file-bench
  time-shell-cmd
  racket-time-extract-result
  linux-time-extract-result)
@@ -68,8 +68,8 @@
 
 ;; m-command-or-proc : (or/c command procedure? nothing)
 
-;; mk-shell-bench : string? m-command-or-proc -> benchmark-one?
-(define (mk-shell-bench
+;; make-shell-bench : string? m-command-or-proc -> benchmark-one?
+(define (make-shell-bench
          name
          run
          #:configure [configure nothing]         ;; m-command-or-proc
@@ -90,7 +90,7 @@
                        itrs-per-trial
                        discard-first
                        manual-report-time)])
-  (mk-bench-one
+  (make-bench-one
    name
    (thunk
     (report-time (time-shell-cmd
@@ -104,8 +104,8 @@
                        [itrs-per-trial 1]
                        [manual-report-time #t])))
 
-;; mk-racket-file-bench : string? string? (listof string?) -> benchmark-one?
-(define (mk-racket-file-bench
+;; make-racket-file-bench : string? string? (listof string?) -> benchmark-one?
+(define (make-racket-file-bench
          name
          fname
          args
@@ -127,7 +127,7 @@
                        itrs-per-trial
                        discard-first
                        manual-report-time)])
-  (mk-shell-bench
+  (make-shell-bench
    name
    (intercalate-strings (cons "racket" (append args (list fname))) " ")
    #:configure configure

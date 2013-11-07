@@ -9,7 +9,7 @@
   (do-fib)
   (time-internal do-fib))
 
-(define (mk-fib-bench n fn)
+(define (make-fib-bench n fn)
   (bench-one (format "fib ~a" n) (fn n)))
 
 (define fib-inputs (list 19 20 21))
@@ -18,16 +18,16 @@
   (parameterize ([manual-report-time #t]
                  [gc-between #f]
                  [itrs-per-trial 1])
-    (mk-bench-group
+    (make-bench-group
      "internals"
      (map (lambda (n)
-            (mk-fib-bench n fib-internal)) fib-inputs))))
+            (make-fib-bench n fib-internal)) fib-inputs))))
 
 (define fib-external-group
   (parameterize ([gc-between #f])
-    (mk-bench-group
+    (make-bench-group
      "externals"
-     (map (lambda (m) (mk-fib-bench m fib)) fib-inputs))))
+     (map (lambda (m) (make-fib-bench m fib)) fib-inputs))))
 
 ;; note: can't do something like:
 ;; (parameterize ([gc-between #f])

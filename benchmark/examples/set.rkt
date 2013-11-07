@@ -23,7 +23,7 @@
 (define sample-vals unfiltered-samples)
 
 ;; benchmark lookup-fn querying set for each of vals
-(define (mk-bench lookup-fn set vals set-count)
+(define (make-bench lookup-fn set vals set-count)
   (bench-one
    ;; name of this benchmark
    (format "~a/~a" set-count (length vals))
@@ -35,18 +35,18 @@
                  [itrs-per-trial 100]
                  [num-trials 50])
     (list
-     (mk-bench-group
+     (make-bench-group
       "list set" ;; name of this group
       ;; list of benchmark-one? in this group (one per element of sample-lists)
       (map (lambda (set vals)
-             (mk-bench (lambda (lst v) (member v lst)) set vals (length set)))
+             (make-bench (lambda (lst v) (member v lst)) set vals (length set)))
            sample-lists
            sample-vals))
-     (mk-bench-group
+     (make-bench-group
       "racket set" ;; name of this group
       ;; list of benchmark-one? in this group (one per element of sample-sets)
       (map (lambda (set vals)
-             (mk-bench set-member? set vals (set-count set)))
+             (make-bench set-member? set vals (set-count set)))
            sample-sets
            sample-vals)))))
 

@@ -27,14 +27,14 @@
 (define benches
   (parameterize ([gc-between #f])
     (list
-     (mk-bench-group
+     (make-bench-group
       "slow (1 itr per trial)"
       (map
        (lambda (i)
          (parameterize ([itrs-per-trial 1])
            (bench-one (fmt i) (slow-fib i))))
        inputs))
-     (mk-bench-group
+     (make-bench-group
       "fast (10000 itrs per trial)"
       (map
        (lambda (i)

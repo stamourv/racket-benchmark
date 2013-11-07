@@ -6,7 +6,7 @@
 (define fib-group
   (parameterize ([num-trials 30]
                  [gc-between #f])
-    (mk-bench-group
+    (make-bench-group
      "fibs"
      (list (bench-one "fib 18" (fib 18))
            (bench-one "fib 19" (fib 19))))))

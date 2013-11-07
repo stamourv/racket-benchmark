@@ -36,8 +36,8 @@
                  [num-trials 31]
                  [itrs-per-trial 10])
     (list
-     (mk-bench-group "partial" (map mk-bench-one names partial-thunks))
-     (mk-bench-group "complete" (map mk-bench-one names complete-thunks)))))
+     (make-bench-group "partial" (map make-bench-one names partial-thunks))
+     (make-bench-group "complete" (map make-bench-one names complete-thunks)))))
 
 (define results (run-benchmarks benches))
 

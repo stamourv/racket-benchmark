@@ -4,13 +4,13 @@
 
 (provide ;; single benchmark
          (struct-out benchmark-one)
-         mk-bench-one
+         make-bench-one
          bench-one
          ;; shell benchmarks
          (struct-out shell-benchmark)
          ;; grouping benchmarks together by name
          (struct-out benchmark-group)
-         mk-bench-group
+         make-bench-group
          ;; options
          (struct-out benchmark-opts)
          gc-between
@@ -30,7 +30,7 @@
          (struct-out benchmark-result)
          ;; for persistent results
          (struct-out bench-results)
-         mk-bench-result)
+         make-bench-result)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Specifying Benchmarks ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -45,12 +45,12 @@
 (define-syntax (bench-one stx)
   (syntax-parse stx
     [(_ n:expr b:expr)
-     #'(mk-bench-one n (thunk b))]
+     #'(make-bench-one n (thunk b))]
     [(_ b:expr)
-     #'(mk-bench-one (format "~a" 'b) (thunk b))]))
+     #'(make-bench-one (format "~a" 'b) (thunk b))]))
 
-;; mk-bench-one : string? procedure? -> benchmark-one?
-(define (mk-bench-one
+;; make-bench-one : string? procedure? -> benchmark-one?
+(define (make-bench-one
          name
          thunk
          #:gc-between [gc-between (gc-between)]            ;; boolean?
@@ -86,8 +86,8 @@
   #:transparent
   )
 
-;; mk-bench-group : string? (listof benchmark-one?) -> benchmark-group?
-(define (mk-bench-group
+;; make-bench-group : string? (listof benchmark-one?) -> benchmark-group?
+(define (make-bench-group
          name
          benchmarks)
   (benchmark-group name benchmarks))
@@ -118,7 +118,7 @@
   #:prefab
   )
 
-(define mk-bench-result benchmark-result)
+(define make-bench-result benchmark-result)
 
 (struct bench-results
   (results    ;; (listof benchmark-result?)

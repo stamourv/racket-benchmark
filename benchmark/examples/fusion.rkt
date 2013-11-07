@@ -24,18 +24,18 @@
   (parameterize ([gc-between #f]
                  [itrs-per-trial 200]
                  [num-trials 50])
-    (mk-bench-group
+    (make-bench-group
      ""
      (list
-      (mk-bench-group
+      (make-bench-group
        "fusion"
        (map
-        (lambda (n l) (mk-bench-one n (thunk (fuse l))))
+        (lambda (n l) (make-bench-one n (thunk (fuse l))))
         list-sizes-strs sample-lists))
-      (mk-bench-group
+      (make-bench-group
        "no-fusion"
        (map
-        (lambda (n l) (mk-bench-one n (thunk (no-fuse l))))
+        (lambda (n l) (make-bench-one n (thunk (no-fuse l))))
         list-sizes-strs sample-lists))))))
 
 (define results (run-benchmarks benches))
