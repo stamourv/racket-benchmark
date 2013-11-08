@@ -33,11 +33,11 @@
      run-time
      clean-time)))
 
-;; maybe-execute-cmd : (or/c command procedure? nothing?)
-;;                      -> (or/c real? nothing?)
+;; maybe-execute-cmd : (or/c command procedure? #f?)
+;;                      -> (or/c real? #f?)
 (define (maybe-execute-cmd action)
-  (if (nothing? action)
-      nothing
+  (if (not action)
+      #f
       (time-delta
        (thunk
         (unless (if (procedure? action)
@@ -54,7 +54,7 @@
               ([current-output-port out])
             (and
              ;; TODO: use contracts
-             (not (nothing? action))
+             action
              (not (procedure? action))
              (maybe-execute-cmd action)))])
     (cons run-time (extract-times (get-output-bytes out)))))
@@ -66,30 +66,26 @@
     (let ([end (current-inexact-milliseconds)])
       (- end start))))
 
-;; m-command-or-proc : (or/c command procedure? nothing)
+;; m-command-or-proc : (or/c command procedure? #f)
 
 ;; make-shell-bench : string? m-command-or-proc -> benchmark-one?
 (define (make-shell-bench
          name
          run
-         #:configure [configure nothing]         ;; m-command-or-proc
-         #:build [build nothing]                 ;; m-command-or-proc
+         #:configure [configure #f]         ;; m-command-or-proc
+         #:build [build #f]                 ;; m-command-or-proc
          #:extract-result
          [extract-result
           racket-time-extract-result] ;; (bytes? -> benchmark-trial-time?)
-         #:clean [clean nothing]                 ;; m-command-or-proc
-         #:gc-between [gc-between (gc-between)]            ;; boolean?
+         #:clean [clean #f]                 ;; m-command-or-proc
          #:num-trials [num-trials (num-trials)]             ;; exact-integer?
-         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
          #:discard-first [discard-first (discard-first)]    ;; boolean?
-         #:manual-report-time
-         [manual-report-time (manual-report-time)]          ;; boolean?
          #:opts [opts (benchmark-opts
-                       gc-between
+                       (gc-between)
                        num-trials
-                       itrs-per-trial
+                       (itrs-per-trial)
                        discard-first
-                       manual-report-time)])
+                       (manual-report-time))])
   (make-bench-one
    name
    (thunk
@@ -109,42 +105,29 @@
          name
          fname
          args
-         #:configure [configure nothing]               ;; m-comand-or-proc
+         #:configure [configure #f]               ;; m-comand-or-proc
          #:build [build (format "raco make ~a" fname)] ;; m-command-or-proc
          #:extract-result
          [extract-result
           racket-time-extract-result]             ;; (bytes-> benchmark-trial-time?)
-         #:clean [clean nothing]              ;; m-command-or-proc
-         #:gc-between [gc-between (gc-between)]            ;; boolean?
+         #:clean [clean #f]              ;; m-command-or-proc
          #:num-trials [num-trials (num-trials)]             ;; exact-integer?
-         #:itrs-per-trial [itrs-per-trial (itrs-per-trial)] ;; exact-integer?
          #:discard-first [discard-first (discard-first)]    ;; boolean?
-         #:manual-report-time
-         [manual-report-time (manual-report-time)]          ;; boolean?
          #:opts [opts (benchmark-opts
-                       gc-between
+                       (gc-between)
                        num-trials
-                       itrs-per-trial
+                       (itrs-per-trial)
                        discard-first
-                       manual-report-time)])
+                       (manual-report-time))])
   (make-shell-bench
    name
-   (intercalate-strings (cons "racket" (append args (list fname))) " ")
+   (string-join (cons "racket" (append args (list fname))) " ")
    #:configure configure
    #:build build
    #:extract-result extract-result
    #:clean clean
    #:opts opts))
 
-(define (intercalate-strings lst val)
-  (apply string-append (intersperse lst val)))
-
-(define (intersperse lst val)
-  (if (null? lst)
-      (list)
-      (cons (car lst) (cons val (intersperse (cdr lst) val)))))
-
-;; racket-time-extract-result : bytes? -> benchmark-trial-time?
 (define (racket-time-extract-result str)
   (let* ([m (regexp-match #rx#"cpu time: ([0-9]+) real time: ([0-9]+) gc time: ([0-9]+)" str)])
     (if (not m)

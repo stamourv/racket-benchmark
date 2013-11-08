@@ -9,7 +9,6 @@
    "ping"
    (format "ping -c ~a ccs.neu.edu" count)
    #:extract-result extract-time
-   #:gc-between #f
    #:num-trials 30
    #:discard-first #f))
 
