@@ -8,9 +8,6 @@
          bench-one
          ;; shell benchmarks
          (struct-out shell-benchmark)
-         ;; grouping benchmarks together by name
-         (struct-out benchmark-group)
-         make-bench-group
          ;; options
          (struct-out benchmark-opts)
          gc-between
@@ -78,19 +75,6 @@
    )
   #:transparent
   )
-
-(struct benchmark-group
-  (name            ;; string?
-   benchmarks      ;; (listof benchmark-one?)
-   )
-  #:transparent
-  )
-
-;; make-bench-group : string? (listof benchmark-one?) -> benchmark-group?
-(define (make-bench-group
-         name
-         benchmarks)
-  (benchmark-group name benchmarks))
 
 (struct benchmark-opts
   (gc-between         ;; boolean?

@@ -5,31 +5,19 @@
          "print.rkt"
          "time.rkt"
          "external.rkt")
-
 (require math/statistics)
 
 (provide run-benchmarks)
 
-;; relname : string? string? -> string?
-(define (relname a b)
-  (if (equal? "" a) b (string-append a "/" b)))
-
-;; run-benchmarks : (or/c benchmark-one? benchmark-group?)
+;; run-benchmarks : (listof benchmark-one?)
 ;;                  -> (listof benchmark-result?)
-(define (run-benchmarks bs [group-name ""])
-  ;; run a benchmark (benchmark-one? or benchmark-group?)
-  ;; from benchmark-group? bs after combining options of
-  ;; group with those optional opts
-  (define (run-group-elem e)
-    (run-benchmarks
-     e
-     (relname group-name (benchmark-group-name bs))))
+(define (run-benchmarks bs)
   ;; run a benchmark-one?
   (define (run-one b)
     (let*
         ;; compute final options, filling in with default values as needed
         ([final-opts (benchmark-one-opts b)]
-         [final-name (relname group-name (benchmark-one-name b))]
+         [final-name (benchmark-one-name b)]
          [itrs-per-trial (benchmark-opts-itrs-per-trial final-opts)]
          [adjusted-num-trials
           (if (benchmark-opts-discard-first final-opts)
@@ -70,13 +58,4 @@
            [stats (raw-to-stats trimmed-times)])
         (print-times (raw-to-stats trimmed-times))
         (make-bench-result final-name final-opts stats))))
-  (cond
-   [(benchmark-group? bs)
-    (append-map run-group-elem (benchmark-group-benchmarks bs))]
-   [(benchmark-one? bs) (list (run-one bs))]
-   [(list? bs) (append-map (lambda (b) (run-benchmarks b group-name)) bs)]
-   [else
-    (raise-argument-error
-     'run-benchmarks
-     "(or/c benchmark-one? benchmark-group?)"
-     bs)]))
+  (map run-one bs))

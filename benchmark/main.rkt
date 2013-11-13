@@ -13,7 +13,6 @@
          bench-one
          make-shell-bench
          make-racket-file-bench
-         make-bench-group
          gc-between
          num-trials
          itrs-per-trial
