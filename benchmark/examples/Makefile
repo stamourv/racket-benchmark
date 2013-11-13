@@ -29,4 +29,7 @@ all: tests optimization-coach sanity
 
 .PHONY: clean
 clean:
-	find . -type d -name compiled -exec rm -rf {} \;
+	rm -f *~
+	rm -f *.bench-*
+	rm -f results-info-*
+	find . -type d -name compiled -exec rm -rf {} \; || true
