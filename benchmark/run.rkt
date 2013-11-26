@@ -3,8 +3,7 @@
 (require "types.rkt"
          "stats.rkt"
          "print.rkt"
-         "time.rkt"
-         "external.rkt")
+         "time.rkt")
 (require math/statistics)
 
 (provide run-benchmarks)

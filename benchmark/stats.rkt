@@ -4,12 +4,9 @@
 (require math/statistics)
 
 (provide raw-to-stats
-         normalize-br
-         min-samples)
+         normalize-br)
 
-;; minimum number of samples needed to calculate confidence intervals
-;; paramter to allow overriding by user during debugging
-(define min-samples (make-parameter 30))
+(define min-samples 30)
 
 ;; assumes random errors can be modeled by a normal distribution
 ;; TODO: how do we know if our errors can be modeled by a normal distribution?
@@ -89,11 +86,12 @@
         [z (if (equal? confidence-level default-conf-level)
                default-z
                (error (format "confidence level ≠ ~a" default-conf-level)))])
-    (if (< n (min-samples))
-        (error
-         (format "number of samples (~a) must be ≥ ~a. Configurable with min-samples parameter" n (min-samples)))
-        (cons (- arith-mean (* z (/ std-dev (sqrt n))))
-              (+ arith-mean (* z (/ std-dev (sqrt n))))))))
+    (when (< n min-samples)
+      (displayln
+       (format "number of samples ~a < ~a" n min-samples)
+       (current-error-port)))
+    (cons (- arith-mean (* z (/ std-dev (sqrt n))))
+          (+ arith-mean (* z (/ std-dev (sqrt n)))))))
 
 (module+ test
   (define (test-confidence-interval)
@@ -176,26 +174,13 @@
   (define normd-gc-samples
     (map (lambda (s) (* s norm-gc-val))
          (samples benchmark-trial-stats-gc)))
-  ;;   check that benchmarks are comparable, leveraging transitivity
-  (if (benchmarks-comparable? norm-br br)
-      (benchmark-result
-       (benchmark-result-name br)
-       (benchmark-result-opts br)
-       (raw-to-stats (map benchmark-trial-time
-                          normd-cpu-samples
-                          normd-real-samples
-                          normd-gc-samples)))
-      (error (format "Benchmarks ~a and ~a not comparable" norm-br br))))
-
-;; Note: this must be a transitive relation to allow comparison of each
-;; benchmark with the one other in the group and know the group is
-;; comparable
-(define (benchmarks-comparable? br1 br2)
-  (andmap
-   (lambda (f) (equal?
-                       (f (benchmark-result-opts br1))
-                       (f (benchmark-result-opts br2))))
-   (list benchmark-opts-gc-between)))
+  (benchmark-result
+   (benchmark-result-name br)
+   (benchmark-result-opts br)
+   (raw-to-stats (map benchmark-trial-time
+                      normd-cpu-samples
+                      normd-real-samples
+                      normd-gc-samples))))
 
 (module+ test
   (test-confidence-interval)

@@ -46,83 +46,39 @@
 
 ;; render-benchmark-alts : (listof string?) string? (listof benchmark-result?)
 ;;                         -> renderer2d?
-(define (render-benchmark-alts alt-names norm-alt-name brs)
-  (define (br-name br) (benchmark-result-name br))
-  ;; for comparing groups of benchmarks
-  (define (select-benchmarks-group alt-name)
-    (define (norm-list br-suff)
+(define (render-benchmark-alts
+         norm-opts
+         brs
+         #:format-opts
+         [format-opts (lambda (opts) (apply ~s opts #:separator " "))])
+  (define names (set->list (list->set (map benchmark-result-name brs))))
+  (define opts (set->list (list->set (map benchmark-result-opts brs))))
+  (define (norm-br name)
+    (define filtered-brs
       (filter (lambda (br)
-                (equal?
-                 (br-name br)
-                 (string-append norm-alt-name "/" br-suff)))
+                (and (equal? name (benchmark-result-name br))
+                     (equal? norm-opts (benchmark-result-opts br))))
               brs))
-    (define alt-name-pref (string-append alt-name "/"))
-    (define (norm-br br-suff)
-      (define nl (norm-list br-suff))
-      (define norm-br-name (string-append norm-alt-name "/" br-suff))
-      (cond [(null? nl)
-             (error (format "Benchmark ~a not found" norm-br-name))]
-            [(< 1 (length nl))
-             (error (format "Duplicate ~a found" norm-br-name))]
-            [else (car nl)]))
-    (let
-        ([normd-brs
-          (filter-map
-           (lambda (br)
-             (if (string-prefix? alt-name-pref (br-name br))
-                 (let ([new-name
-                        (substring (br-name br) (string-length alt-name-pref))]
-                       [opts (benchmark-result-opts br)]
-                       [trial-stats (benchmark-result-trial-stats br)])
-                   (normalize-br
-                    (norm-br new-name)
-                    (make-bench-result (br-name br) opts trial-stats)))
-                 #f))
-           brs)])
-      (if (null? normd-brs)
-          (error (format
-                  "No benchmarks found for alternative group ~a"
-                  alt-name-pref))
-          normd-brs)))
-  ;; for comparing individual benchmarks
-  (define (select-benchmarks-individual alt-name)
-    (define (norm-br)
-      (define nl
-        (filter (lambda (br)
-                  (equal? norm-alt-name (br-name br)))
-                brs))
-      (cond [(null? nl)
-             (error (format "Benchmark ~a not found" norm-alt-name))]
-            [(< 1 (length nl))
-             (error (format "Duplicate ~a found" norm-alt-name))]
-            [else (car nl)]))
-    (let ([normd-brs
-           (filter-map
-            (lambda (br)
-              (if (equal? (br-name br) alt-name)
-                  (normalize-br (norm-br) br)
-                  #f))
-            brs)])
-      (if (null? normd-brs)
-          (error (format "Single: No benchmarks found for alternative '~a'" alt-name))
-          normd-brs)))
-  ;; if the norm-alt-name is an actual benchmark anem, we are comparing
-  ;; individual benchmarks. otherwise, we are comparing groups
-  (define select-benchmarks
-    (if (ormap (lambda (br) (equal? (br-name br) norm-alt-name)) brs)
-        (begin
-          (displayln
-           (format
-            "~a is a benchmark name, treating alternatives as individual benchmarks"
-            norm-alt-name))
-          select-benchmarks-individual)
-          (begin
-            (displayln
-             (format
-              "~a is not a benchmark name, treating alternatives as group names"
-              norm-alt-name))
-            select-benchmarks-group)))
-  (define num-alts (length alt-names))
+    (if (null? filtered-brs)
+        (error (format
+                "Could not find standard benchmark: name ~a, opts ~a"
+                name
+                norm-opts))
+        (car filtered-brs)))
+  (define norm-brs
+    (make-immutable-hash
+     (map (lambda (n) (cons n (norm-br n))) names)))
+  (define normalized-benchmarks
+    (map
+     (lambda (br)
+       (normalize-br
+        (hash-ref norm-brs (benchmark-result-name br))
+        br))
+     brs))
+  (define (select-benchmarks opts)
+    (filter (lambda (br) (equal? opts (benchmark-result-opts br)))
+            normalized-benchmarks))
+  (define num-alts (length opts))
   (define alt-nums (for/list ([i (in-range 0 num-alts)]) i))
   (define colors
     (for/list ([i (in-range num-alts)]
@@ -136,9 +92,16 @@
   (define skip (+ num-alts 1))
   (define bar-width (- (/ skip (+ num-alts 1)) (discrete-histogram-gap)))
   (append-map
-   (lambda (an c s x)
-     (render-benchmark-alt an (select-benchmarks an) c s x skip bar-width))
-   alt-names
+   (lambda (o c s x)
+     (render-benchmark-alt
+      (format-opts o)
+      (select-benchmarks o)
+      c
+      s
+      x
+      skip
+      bar-width))
+   opts
    colors
    styles
    start-xs))
@@ -179,5 +142,4 @@
                        #:color color
                        #:style style
                        #:x-min start-x))
-   
    (map data-error-bars brs (for/list ([i (in-range 0 (length brs))]) i))))

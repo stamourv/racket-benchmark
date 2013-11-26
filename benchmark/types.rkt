@@ -122,10 +122,7 @@
   )
 
 (struct shell-benchmark-trial-time benchmark-trial-time
-  (configure-time  ;; exact-integer?
-   build-time      ;; exact-integer?
-   run-time        ;; exact-integer?
-   clean-time      ;; exact-integer?
+  (delta-run-time  ;; exact-integer?
    )
   #:prefab
   )
