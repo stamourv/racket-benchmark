@@ -5,8 +5,12 @@ compiled/
 oc-external/
 benches/
 doc/
+old-examples/optimization-coach/captured-frames
+old-examples/optimization-coach/moments-2000
 *.css
 *.js
 *.pdf
 *.html
 *.png
+benchmark.md
+ntoronto.rkt
