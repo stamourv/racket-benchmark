@@ -69,10 +69,10 @@ the @(racket plot) library is provided.
 @defproc[(run-macro-benchmarks
           [whats (listof string?)]
           [hows (listof (listof any/c))]
-          [run (procedure?)]
+          [run procedure?]
           [#:build build (or/c procedure? #f) #f]
           [#:clean clean (or/c procedure? #f) #f]
-          [#:extract-time extract-time (-> bytes benchmark-trial-time?)
+          [#:extract-time extract-time (-> bytes? benchmark-trial-time?)
                           racket-time-extract-result]
           [#:num-trials num-trials exact-integer? 30]
           [#:make-name make-name (-> string? string?) id])
@@ -157,7 +157,7 @@ of benchmarks using the @(racket plot) library.
           [norm-opts (listof any/c)]
           [benchmark-results (listof benchmark-result?)]
           [#:format-opts format-opts
-                         (-> (listof any/c) string)
+                         (-> (listof any/c) string?)
                          (lambda (opts) (apply ~s opts #:separator " "))])
          renderer2d?]{
 Produces a @(racket renderer2d?) of normalized time
