@@ -19,7 +19,7 @@
          #:extract-time [extract-time racket-time-extract-result]
          #:num-trials [num-trials 30] ;; exact-integer?
          ;; (any/c ... -> string?)
-         #:make-name [make-name (lambda (n . rst) n)])
+         #:make-name [make-name (lambda (x) x)])
   (define (build-run-clean-1 opts)
     (define what (car opts))
     (define how (cdr opts))
@@ -47,7 +47,7 @@
             (time-delta (thunk (apply clean opts))))
           0))
     (benchmark-result
-     (apply make-name (cons what how))
+     (make-name what)
      how
      (raw-to-stats run-times)))
   (map build-run-clean-1 (cartesian-product (cons whats hows))))
