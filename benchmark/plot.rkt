@@ -50,9 +50,9 @@
          norm-opts
          brs
          #:format-opts
-         [format-opts (lambda (opts) (apply ~s opts #:separator " "))])
-  (define names (set->list (list->set (map benchmark-result-name brs))))
-  (define opts (set->list (list->set (map benchmark-result-opts brs))))
+         [format-opts (lambda (opts) (apply ~a opts #:separator " "))])
+  (define names (remove-duplicates (map benchmark-result-name brs)))
+  (define opts (remove-duplicates (map benchmark-result-opts brs)))
   (define (norm-br name)
     (define filtered-brs
       (filter (lambda (br)
