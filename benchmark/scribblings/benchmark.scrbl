@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label racket plot racket/set "../main.rkt"))
-@(require "external-file.rkt" scribble/eval scribble/core)
+@(require scribble/eval scribble/core)
 
 @title[#:tag "top"]{Benchmark}
 @author{@(author+email "Josh McGrath" "mcgrathj@ccs.neu.edu")}
@@ -70,15 +70,14 @@ options using colors.
       results)))
   )
 
-@racketmod+eval[#:file "../examples/macro-examples/fib.rkt"
+@racketmod[#:file "../examples/macro-examples/fib.rkt"
   racket
-
   (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
 
   (time (fib 26))
 ]
 
-@racketmod+eval[#:file "../examples/macro-examples/collatz1000.rkt"
+@racketmod[#:file "../examples/macro-examples/collatz1000.rkt"
   racket
   (define (collatz n)
     (if (even? n)
