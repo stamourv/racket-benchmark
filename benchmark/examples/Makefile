@@ -1,4 +1,6 @@
-ALL_TESTS=$(shell ls *.rkt)
+IGNORE=sleep.rkt
+ALL_TESTS=$(shell ls *.rkt | \
+			grep -v "$(shell echo '$(IGNORE)' | sed 's/ /\\|/g')")
 
 .PHONY: tests
 tests: $(foreach t,$(ALL_TESTS), $(t)_test)
