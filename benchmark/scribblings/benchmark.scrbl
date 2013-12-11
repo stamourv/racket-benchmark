@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket plot racket/set "../main.rkt"))
+@(require (for-label racket plot plot/utils racket/set "../main.rkt"))
 @(require scribble/eval scribble/core)
 
 @title[#:tag "top"]{Benchmark}
@@ -8,27 +8,18 @@
 
 @defmodule[benchmark]
 
-@elem[#:style (style #f (list (color-property "red")))]{
-As has been pointed out by Neil Toronto, the method
-of normalization used by @(racket render-benchmark-alts) produces
-confidence intervals that are too narrow. This needs to be fixed...
-}
-
 The goal of the @(racket benchmark) library is to reduce the effort of
-writing benchmark harnesses for macro benchmarks. Specifically, this
-library aims to handle the sampling and comparing of results using
-sound statistical methods. A typical use for this library is comparing
-different versions of Racket for a fixed set of programs.
-
-At a high level, benchmarks are represented as a Cartesian product
-of (n+1) vectors, where one vector represents what (e.g. the files) to
-be run, and the remaining n vectors represent how (e.g. flags or
-binaries) to run. These vectors are supplemented by a user-specified
-function dictating how to run.
+writing benchmark harnesses. Specifically, this
+library aims to handle the sampling and plot rendering of results using
+sound statistical methods. This library is designed for comparing:
+different versions of Racket for a fixed set of programs, different versions
+of programs with the same version of Racket, or both (different versions
+of Racket and different versions of the programs). But as the examples in
+the first two sections will show, it is not limited to these use cases.
 
 @table-of-contents[]
 
-@section[#:tag "simple example"]{Example: Measuring Racket's JIT}
+@section[#:tag "simple example"]{Example: Measuring the Impact of Racket's JIT}
 
 In the following example we evaluate the use of Racket's JIT on two
 simple programs, running each with and without JIT, and then plot
@@ -70,14 +61,14 @@ options using colors.
       results)))
   )
 
-@racketmod[#:file "../examples/macro-examples/fib.rkt"
+@racketmod[#:file "fib.rkt"
   racket
   (define (fib n) (if (<= n 1) n (+ (fib (- n 1)) (fib (- n 2)))))
 
   (time (fib 26))
 ]
 
-@racketmod[#:file "../examples/macro-examples/collatz1000.rkt"
+@racketmod[#:file "collatz1000.rkt"
   racket
   (define (collatz n)
     (if (even? n)
@@ -102,10 +93,6 @@ Such an example will be given in the next section.
 
 @section[#:tag "simple example fibonacci and jit"]{Example: Vectors vs Lists}
 
-@elem[#:style (style #f (list (color-property "red")))]{
-This section needs a lot of work
-}
-
 Here we use @(racket 'delta-time) to demonstrate measuring the time
 to evaluate @(racket (run ...)). At a high level we will be evaluating
 lists vs vectors for map and append. Specifically, map and append
@@ -116,12 +103,12 @@ of list and vector, we will evaluate map and append.
 
 @#reader scribble/comment-reader
 (interaction
-  (require benchmark plot racket/match racket/vector racket/stream)
+  (require benchmark plot racket/match racket/vector racket/list)
 
   ;; list/vector sizes
   (define sizes (list 50000 100000))
 
-  (define lists (map (lambda (i) (build-list i values)) sizes))
+  (define lists (map (lambda (i) (range i)) sizes))
 
   (define vectors (map list->vector lists))
 
@@ -132,7 +119,7 @@ of list and vector, we will evaluate map and append.
      ;; list of options (hows)
      (list
       ;; sizes (and their indices) in the sizes list
-      (map cons (build-list (length sizes) values) sizes)
+      (map cons (range (length sizes)) sizes)
       ;; implementations of operations
       (list 'vector 'list))
      ;; to run each benchmark
@@ -172,7 +159,7 @@ of list and vector, we will evaluate map and append.
                         (format "size: ~a, ~a" (cdr index/size) impl))))))
   )
 
-@section[#:tag "running macro benchmarks"]{Running Macro Benchmarks}
+@section[#:tag "running macro benchmarks"]{Running Benchmarks}
 @defproc[(run-benchmarks
           [whats (listof string?)]
           [hows (listof (listof any/c))]
@@ -182,17 +169,16 @@ of list and vector, we will evaluate map and append.
           [#:extract-time extract-time (or/c 'delta-time (-> string benchmark-trial-time?))
                           racket-time-extract-result]
           [#:num-trials num-trials exact-integer? 30]
-          [#:make-name make-name (-> string? string?) (lambda (x) x)]
-          [#:skip skip procedure? (lambda (r . rest) #f)])
+          [#:make-name make-name (-> string? string?) identity]
+          [#:skip skip procedure? (lambda _ #f)])
          (listof benchmark-result?)]{
 
-@(racket run) is executed on each combination of one
-item from @(racket whats) and one element from each of the elements
-of @(racket hows). Thus, the arity of @(racket run) must be
-@(racket (+ 1 (length hows))).
+For each @(racket what), @(racket run) is executed for each
+combination of one element from each of the elements of @(racket hows).
+Thus, the arity of @(racket run) must be @(racket (+ 1 (length hows))).
 
 @(racket build) and @(racket clean) are functions with the same argument
-types as @(racket run) and are run before each @(racket num-trials)
+types as @(racket run) and are run before and after each @(racket num-trials)
 runs of @(racket run).
 
 When not @(racket 'delta-time), @(racket extract-time) is
@@ -207,7 +193,8 @@ is expected to produce the name for the result. This is useful
 for stripping directories or file extensions.
 
 @(racket skip) has the same argument types as @(racket run), and when
-it evaluates to true the associated benchmark is skipped.
+it evaluates to true the associated benchmark/options combination
+is skipped.
 
 Benchmarks are logically specified as an (n+1)-dimensional
 matrix where n of the dimensions are options (how to run) and one dimension is
@@ -261,6 +248,12 @@ function.
 @(racket benchmark) exports a @(racket renderer2d?) for plotting results
 of benchmarks using the @(racket plot) library.
 
+@elem[#:style (style #f (list (color-property "red")))]{
+As has been pointed out by Neil Toronto, the method
+of normalization used by @(racket render-benchmark-alts) produces
+confidence intervals that are too narrow. This needs to be fixed...
+}
+
 @defproc[(render-benchmark-alts
           [norm-opts (listof any/c)]
           [benchmark-results (listof benchmark-result?)]
@@ -293,22 +286,22 @@ Color schemes are used to make benchmark plots more readable by
 coloring benchmarks according to the options (hows). In @secref["simple example"]
 the 'jit' option is salmon and the 'no-jit' option blue.
 
-@defparam[current-benchmark-color-scheme benchmark-color-scheme (cons/c (listof plot-color/c) plot-brush-style/c)]{
+@defparam[current-benchmark-color-scheme benchmark-color-scheme (cons/c (listof plot-color/c) (listof plot-brush-style/c))]{
 Default is @(racket pastel-color-scheme). Parameter controlling
 color scheme used by @(racket render-benchmark-alts).
 }
 
 Available color schemes:
-@deftogether[(@defthing[bright-color-scheme (cons/c (listof plot-color/c) plot-brush-style/c)]
-@defthing[pastel-color-scheme (cons/c (listof plot-color/c) plot-brush-style/c)]
-@defthing[black-white-color-scheme-short (cons/c (listof plot-color/c) plot-brush-style/c)]
-@defthing[black-white-color-scheme-medium-1 (cons/c (listof plot-color/c) plot-brush-style/c)]
-@defthing[black-white-color-scheme-medium-2 (cons/c (listof plot-color/c) plot-brush-style/c)]
-@defthing[black-white-color-scheme-long (cons/c (listof plot-color/c) plot-brush-style/c)])]{
+@deftogether[(@defthing[bright-color-scheme (cons/c (listof plot-color/c) (listof plot-brush-style/c))]
+@defthing[pastel-color-scheme (cons/c (listof plot-color/c) (listof plot-brush-style/c))]
+@defthing[black-white-color-scheme-short (cons/c (listof plot-color/c) (listof plot-brush-style/c))]
+@defthing[black-white-color-scheme-medium-1 (cons/c (listof plot-color/c) (listof plot-brush-style/c))]
+@defthing[black-white-color-scheme-medium-2 (cons/c (listof plot-color/c) (listof plot-brush-style/c))]
+@defthing[black-white-color-scheme-long (cons/c (listof plot-color/c) (listof plot-brush-style/c))])]{
 A few color schemes provided for convenience. Length (short, medium, and long)
-corresponds to the number of distinct colors that are used. 'short' is about 3,
-'medium' is about 5, and 'long' is about 8. In the event that there are more
-unique products of options, the colors wrap around.
+corresponds to the number of distinct colors that are used. 'short' is 3,
+'medium' is 5, and 'long' is 8. In the event that there are more
+unique combinations of options, the colors wrap around.
 }
 
 @section[#:tag "Persisting Results"]{Persisting Results}
