@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket plot plot/utils racket/set "../main.rkt"))
+@(require (for-label racket plot plot/utils racket/runtime-path racket/set "../main.rkt"))
 @(require scribble/eval scribble/core)
 
 @title[#:tag "top"]{Benchmark}
@@ -29,26 +29,37 @@ options using colors.
 
 @#reader scribble/comment-reader
 (interaction
-  (require benchmark plot racket/system)
+  (require benchmark plot racket racket/runtime-path)
+
+  (define-runtime-path fib-path
+    "examples/macro-examples/fib.rkt")
+  (define-runtime-path collatz-path
+    "examples/macro-examples/collatz1000.rkt")
+  (define-runtime-path compiled-dir
+    "examples/macro-examples/compiled")
 
   (define results
     (run-benchmarks
      ;; files to run (whats)
-     (list "fib.rkt" "collatz1000.rkt")
+     (list fib-path collatz-path)
      ;; list of options (hows)
      (list (list 'jit 'no-jit))
      ;; how to run each benchmark
      (lambda (file jit)
-       (system (format "racket ~a examples/macro-examples/~a"
-                       (if (equal? jit 'jit) "" "-j")
-                       file)))
+       (if (equal? jit 'jit)
+           (system* (find-executable-path "racket") file)
+           (system* (find-executable-path "racket") "-j" file)))
      #:build
      (lambda (file jit)
-       (system (format "raco make examples/macro-examples/~a" file)))
+       (system* (find-executable-path "raco") "make" file))
      #:clean
      (lambda (file jit)
-       (system "rm -rf examples/macro-examples/compiled"))
-     #:num-trials 30))
+       (system* (find-executable-path "rm") "-r" "-f" compiled-dir))
+     #:num-trials 30
+     #:make-name (lambda (path)
+                   (let-values
+                       ([(_1 file-name _2) (split-path path)])
+                     (path->string file-name)))))
 
   (parameterize ([plot-x-ticks no-ticks])
     (plot-pict
