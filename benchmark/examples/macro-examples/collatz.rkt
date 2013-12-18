@@ -9,4 +9,4 @@
   (for-each (lambda (n) (collatz n))
             (stream->list (in-range 0 m))))
 
-(time (collatz-range 1000))
+(time (collatz-range 10000))

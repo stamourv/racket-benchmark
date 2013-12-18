@@ -34,7 +34,7 @@ options using colors.
   (define-runtime-path fib-path
     "examples/macro-examples/fib.rkt")
   (define-runtime-path collatz-path
-    "examples/macro-examples/collatz1000.rkt")
+    "examples/macro-examples/collatz.rkt")
   (define-runtime-path compiled-dir
     "examples/macro-examples/compiled")
 
@@ -79,7 +79,7 @@ options using colors.
   (time (fib 26))
 ]
 
-@racketmod[#:file "collatz1000.rkt"
+@racketmod[#:file "collatz.rkt"
   racket
   (define (collatz n)
     (if (even? n)
@@ -90,7 +90,7 @@ options using colors.
     (for-each (lambda (n) (collatz n))
               (stream->list (in-range 0 m))))
 
-  (time (collatz-range 1000))
+  (time (collatz-range 10000))
 ]
 
 
@@ -177,7 +177,7 @@ of list and vector, we will evaluate map and append.
           [run procedure?]
           [#:build build (or/c procedure? #f) #f]
           [#:clean clean (or/c procedure? #f) #f]
-          [#:extract-time extract-time (or/c 'delta-time (-> string benchmark-trial-time?))
+          [#:extract-time extract-time (or/c 'delta-time (-> string real?))
                           racket-time-extract-result]
           [#:num-trials num-trials exact-integer? 30]
           [#:make-name make-name (-> string? string?) identity]
@@ -213,11 +213,11 @@ the names/files (what to run). The names/files dimension is specified in the
 @(racket whats) list. The options dimensions are specified as
 lists in the @(racket hows) list.
 
-In @secref["simple example"], @(racket (list "fib.rkt" "collatz1000.rkt")) is
+In @secref["simple example"], @(racket (list "fib.rkt" "collatz.rkt")) is
 the @(racket whats) and @(racket (list (list 'jit 'no-jit))) is the
 @(racket hows). That is, there is only one dimension of options for
 running @(racket (list 'jit 'no-jit)), and two things to run
-@(racket "fib.rkt") and @(racket "collatz1000.rkt").
+@(racket "fib.rkt") and @(racket "collatz.rkt").
 
 So, execution might look something like:
 @verbatim{
@@ -227,12 +227,12 @@ cleaning (fib.rkt jit)
 building (fib.rkt no-jit)
 running (fib.rkt no-jit) ... (30 times)
 cleaning (fib.rkt no-jit)
-building (collatz1000.rkt jit)
-running (collatz1000.rkt jit) ... (30 times)
-cleaning (collatz1000.rkt jit)
-building (collatz1000.rkt no-jit)
-running (collatz1000.rkt no-jit) ... (30 times)
-cleaning (collatz1000.rkt no-jit)
+building (collatz.rkt jit)
+running (collatz.rkt jit) ... (30 times)
+cleaning (collatz.rkt jit)
+building (collatz.rkt no-jit)
+running (collatz.rkt no-jit) ... (30 times)
+cleaning (collatz.rkt no-jit)
 }
 
 }
@@ -240,19 +240,10 @@ cleaning (collatz1000.rkt no-jit)
 @subsection[#:tag "extracting time"]{Extracting Reported Time}
 
 @defproc[(racket-time-extract-result [str string?])
-         benchmark-trial-time?]{
+         real?]{
 To be used with @(racket #:extract-time) for the output of
 Racket's @(racket time). Note: this is the default for the
 @(racket #:extract-time) argument of @(racket run-benchmarks).
-}
-
-@defstruct[benchmark-trial-time? ([cpu real?]
-                                  [real real?]
-                                  [gc real?])
-           #:prefab]{
-Data structure for reporting the time of a single trial. This is
-exposed to allow the user to write their own @(racket #:extract-time)
-function.
 }
 
 @section[#:tag "Plotting"]{Plotting}

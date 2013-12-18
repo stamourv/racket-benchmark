@@ -1,7 +1,6 @@
 #lang typed/racket
 
-(require plot/typed
-         math/base
+(require math/base
          math/flonum
          math/distributions
          math/statistics)
