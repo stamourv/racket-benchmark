@@ -1,7 +1,7 @@
 #lang racket
 
-(require "types.rkt" "stats.rkt")
-(require plot plot/utils srfi/13)
+(require "types.rkt" "bootstrap-ci.rkt")
+(require plot plot/utils math/statistics)
 
 (provide render-benchmark-alts
          current-benchmark-color-scheme
@@ -43,8 +43,9 @@
 
 (define benchmark-show-legend? (make-parameter #t))
 
+(struct bootstrapped-ci (name opts mean conf-lb conf-ub))
 
-;; render-benchmark-alts : (listof string?) string? (listof benchmark-result?)
+;; render-benchmark-alts : (listof any/c) (listof benchmark-result?)
 ;;                         -> renderer2d?
 (define (render-benchmark-alts
          norm-opts
@@ -68,10 +69,27 @@
   (define norm-brs
     (make-immutable-hash
      (map (lambda (n) (cons n (norm-br n))) names)))
+  (define (speedup-bootstrapped-ci norm-br br)
+    (define br/norm-br
+      (map /
+           (benchmark-result-trial-times br)
+           (benchmark-result-trial-times norm-br)))
+    (define bootstrapped-sample
+      (nonparametric2d-bootstrap
+       mean-quotient
+       (benchmark-result-trial-times br)
+       (benchmark-result-trial-times norm-br)))
+    (bootstrapped-ci
+     (benchmark-result-name br)
+     (benchmark-result-opts br)
+     ;; TODO: is this the proper way to calculate mean?
+     (mean br/norm-br)
+     (bootstrap-bca-conf mean br/norm-br bootstrapped-sample .025)
+     (bootstrap-bca-conf mean br/norm-br bootstrapped-sample .975)))
   (define normalized-benchmarks
     (map
      (lambda (br)
-       (normalize-br
+       (speedup-bootstrapped-ci
         (hash-ref norm-brs (benchmark-result-name br))
         br))
      brs))
@@ -109,19 +127,13 @@
 ;; render-benchmark-alt : string? benchmark-result? plot-color/c
 ;;                        plot-brush-style/c rational? (>=/c 0) (>/c 0)
 ;;                        -> (listof renderer2d?)
-(define (render-benchmark-alt alt-name brs color style start-x skip bar-width
-                    #:type-sel [type-sel benchmark-trial-stats-real])
-  (define (data-point br)
-    (let* ([opts (benchmark-result-opts br)]
-           [data-name (benchmark-result-name br)]
-           [mv (type-sel (benchmark-result-trial-stats br))]
-           [mean (measured-value-mean mv)])
-      (vector data-name mean)))
-  (define (data-error-bars br i)
-    (let* ([mv (type-sel (benchmark-result-trial-stats br))]
-           [conf-lb (measured-value-conf-lb mv)]
-           [conf-ub (measured-value-conf-ub mv)]
-           [conf-mean (/ (+ conf-lb conf-ub) 2)]
+(define (render-benchmark-alt alt-name bcis color style start-x skip bar-width)
+  (define (data-point bci)
+    (vector (bootstrapped-ci-name bci) (bootstrapped-ci-mean bci)))
+  (define (data-error-bars bci i)
+    (let* ([conf-lb (bootstrapped-ci-conf-lb bci)]
+           [conf-ub (bootstrapped-ci-conf-ub bci)]
+           [conf-mean (bootstrapped-ci-mean bci)]
            [conf-ht (- conf-ub conf-mean)]
            [delta-to-mid-bar (/ (+ bar-width (discrete-histogram-gap)) 2)])
       (error-bars (list (vector
@@ -130,16 +142,19 @@
                          conf-ht)))))
   (cons
    (if (benchmark-show-legend?)
-       (discrete-histogram (map data-point brs)
+       (discrete-histogram (map data-point bcis)
                        #:skip skip
                        #:label alt-name
                        #:color color
                        #:style style
                        #:x-min start-x)
-       (discrete-histogram (map data-point brs)
+       (discrete-histogram (map data-point bcis)
                        #:skip skip
                        ;; no labels, that disables the legend
                        #:color color
                        #:style style
                        #:x-min start-x))
-   (map data-error-bars brs (for/list ([i (in-range 0 (length brs))]) i))))
+   (map data-error-bars bcis (for/list ([i (in-range 0 (length bcis))]) i))))
+
+(define (mean-quotient ys xs)
+  (mean (map / ys xs)))

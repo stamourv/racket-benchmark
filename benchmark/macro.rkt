@@ -4,7 +4,7 @@
          racket-time-extract-result)
 
 (require racket/format)
-(require "types.rkt" "stats.rkt")
+(require "types.rkt")
 
 (define benchmark-logger (make-logger 'benchmark (current-logger)))
 
@@ -14,7 +14,7 @@
          run   ;; (any/c ... -> void?)
          #:build [build #f]  ;; (any/c ... -> void?)
          #:clean [clean #f]  ;; (any/c ... -> void?)
-         ;; (or/c 'delta-time string -> benchmark-trial-time?)
+         ;; (or/c 'delta-time (string -> real?))
          #:extract-time [extract-time racket-time-extract-result]
          #:num-trials [num-trials 30] ;; exact-integer?
          ;; (any/c ... -> string?)
@@ -30,11 +30,11 @@
                 (time-delta (thunk (apply run opts))))]
              [extracted-run-time
               (if (equal? extract-time 'delta-time)
-                  (benchmark-trial-time 0 delta-run-time 0)
+                  delta-run-time
                   (extract-time (get-output-string out)))])
         (log-message benchmark-logger 'info "running" opts)
         extracted-run-time))
-    (define out (open-output-string))
+   (define out (open-output-string))
     (define delta-build-time
       (if build
           (begin
@@ -51,7 +51,7 @@
     (benchmark-result
      (make-name what)
      how
-     (raw-to-stats run-times)))
+     run-times))
   (map build-run-clean-1
        (filter (lambda (b) (not (apply skip b)))
                (cartesian-product (cons whats hows)))))
@@ -65,10 +65,7 @@
   (let* ([m (regexp-match #rx"cpu time: ([0-9]+) real time: ([0-9]+) gc time: ([0-9]+)" str)])
     (if (not m)
         (error (format "Could not parse time output: ~a" str))
-        (benchmark-trial-time
-         (string->number (cadr m))
-         (string->number (caddr m))
-         (string->number (cadddr m))))))
+        (string->number (caddr m)))))
 
 ;; time-delta : procedure? -> real?
 (define (time-delta thunk)
