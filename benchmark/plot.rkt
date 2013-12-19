@@ -94,7 +94,7 @@
         br))
      brs))
   (define (select-benchmarks opts)
-    (filter (lambda (br) (equal? opts (benchmark-result-opts br)))
+    (filter (lambda (br) (equal? opts (bootstrapped-ci-opts br)))
             normalized-benchmarks))
   (define num-alts (length opts))
   (define alt-nums (for/list ([i (in-range 0 num-alts)]) i))
