@@ -78,8 +78,13 @@
   (define b (flnormal-inv-cdf 0.0 1.0 (fl (/ p (length ^θ*s))) #f #f))
   (define ^θis (jackknife-samples f xs))
   (define ~θ (mean ^θis))
-  (define a (* 1/6 (/ (sum (map (λ: ([^θi : Real]) (expt (- ~θ ^θi) 3)) ^θis))
-                      (real-part (expt (sum (map (λ: ([^θi : Real]) (sqr (- ~θ ^θi))) ^θis)) 3/2)))))
-  (define z1mα (flnormal-inv-cdf 0.0 1.0 (- 1.0 α) #f #f))
-  (define β (flnormal-cdf 0.0 1.0 (fl (- b (/ (- z1mα b) (+ 1 (* a (- z1mα b)))))) #f #f))
+  (define den (real-part (expt (sum (map (λ: ([^θi : Real]) (sqr (- ~θ ^θi))) ^θis)) 3/2)))
+  (define s
+    (cond [(zero? den)  0]
+          [else
+           (define num (sum (map (λ: ([^θi : Real]) (expt (- ~θ ^θi) 3)) ^θis)))
+           (define a (* 1/6 (/ num den)))
+           (define z1mα (flnormal-inv-cdf 0.0 1.0 (- 1.0 α) #f #f))
+           (/ (- z1mα b) (+ 1 (* a (- z1mα b))))]))
+  (define β (flnormal-cdf 0.0 1.0 (fl (- b s)) #f #f))
   (quantile β < ^θ*s))
