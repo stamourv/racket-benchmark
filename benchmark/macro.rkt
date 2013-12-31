@@ -32,20 +32,20 @@
               (if (equal? extract-time 'delta-time)
                   delta-run-time
                   (extract-time (get-output-string out)))])
-        (log-message benchmark-logger 'info "running" opts)
+        (log-message benchmark-logger 'info (~a "running " opts) opts)
         extracted-run-time))
    (define out (open-output-string))
     (define delta-build-time
       (if build
           (begin
-            (log-message benchmark-logger 'info "building" opts)
+            (log-message benchmark-logger 'info (~a "building " opts) opts)
             (time-delta (thunk (apply build opts))))
           0))
     (define run-times (for/list ([i num-trials]) (run-1)))
     (define delta-clean-time
       (if clean
           (begin
-            (log-message benchmark-logger 'info "cleaning" opts)
+            (log-message benchmark-logger 'info (~a "cleaning " opts) opts)
             (time-delta (thunk (apply clean opts))))
           0))
     (benchmark-result
