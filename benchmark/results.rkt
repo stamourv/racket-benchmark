@@ -21,26 +21,32 @@
 ;; get latest version of file-base if version #f
 ;; if version not #f, get (fmt file-base version)
 (define (get-file file-base version)
-  (define (get-file-names [v 0])
-    (let ([file-name (fmt file-base v)])
-      (if (file-exists? file-name)
-          (cons file-name (get-file-names (+ 1 v)))
-          (list))))
-  (let ([file-names (get-file-names)])
-    (cond
-     ;; no specific version and file-names not null
-     [(and (not version) (not (null? file-names)))
-      (last file-names)]
-     ;; specific version and assoc. file exists
-     [(and version (file-exists? (fmt file-base version)))
-      (fmt file-base version)]
-     ;; specific version and assoc. file doesn't exist
-     [version
-      (error 'get-file "No file found: ~a" (fmt file-base version))]
-     ;; no specific version, but no matching files exist
-     [else
-      (error 'get-file "No files found matching ~a-([0-9]+)"
-              (fmt file-base version))])))
+  (define-values (dir file _) (split-path file-base))
+  (define file-candidates
+    (for*/list ([f (in-directory (if (eq? dir 'relative)
+                                     (current-directory)
+                                     dir))]
+                [n (in-value (regexp-match (format "^(.+/)?~a-([0-9]+)"
+                                                   (path->string file))
+                                           (path->string f)))]
+                #:when n)
+      (cons f (string->number (third n)))))
+  (define sorted-file-candidates
+    (map car (sort file-candidates > #:key cdr)))
+  (cond
+   ;; no specific version and sorted-file-candidates not null
+   [(and (not version) (not (null? sorted-file-candidates)))
+    (first sorted-file-candidates)]
+   ;; specific version and assoc. file exists
+   [(and version (file-exists? (fmt file-base version)))
+    (fmt file-base version)]
+   ;; specific version and assoc. file doesn't exist
+   [version
+    (error 'get-file "No file found: ~a" (fmt file-base version))]
+   ;; no specific version, but no matching files exist
+   [else
+    (error 'get-file "No files found matching ~a-([0-9]+)"
+           file-base)]))
 
 ;; string? [exact-integer?] -> string?
 ;; create a new fresh file name of the form file-base-<n>
