@@ -262,12 +262,6 @@ For more information about logging, see
 @(racket benchmark) exports a @(racket renderer2d?) for plotting results
 of benchmarks using the @(racket plot) library.
 
-@elem[#:style (style #f (list (color-property "red")))]{
-As has been pointed out by Neil Toronto, the method
-of normalization used by @(racket render-benchmark-alts) produces
-confidence intervals that are too narrow. This needs to be fixed...
-}
-
 @defproc[(render-benchmark-alts
           [norm-opts (listof any/c)]
           [benchmark-results (listof benchmark-result?)]
