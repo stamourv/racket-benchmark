@@ -246,6 +246,18 @@ Racket's @(racket time). Note: this is the default for the
 @(racket #:extract-time) argument of @(racket run-benchmarks).
 }
 
+@subsection{Progress Logging}
+
+To track progress of a benchmarking run, @racket[run-benchmarks] logs actions
+(building, running, cleaning) it takes on a logged named @racket['benchmark] at
+logging level @racket['info].
+
+The easiest way to see this logging is to run your benchmark harness with:
+@commandline|{racket -W info@benchmark harness.rkt}|
+
+For more information about logging, see
+@secref[#:doc '(lib "scribblings/reference/reference.scrbl")]{logging}.
+
 @section[#:tag "Plotting"]{Plotting}
 @(racket benchmark) exports a @(racket renderer2d?) for plotting results
 of benchmarks using the @(racket plot) library.
