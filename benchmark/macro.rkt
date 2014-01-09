@@ -24,6 +24,7 @@
     (define what (car opts))
     (define how (cdr opts))
     (define (run-1)
+      (log-message benchmark-logger 'info (~a "running " opts) opts)
       (let* ([out (open-output-string)]
              [delta-run-time
               (parameterize ([current-output-port out])
@@ -32,7 +33,6 @@
               (if (equal? extract-time 'delta-time)
                   delta-run-time
                   (extract-time (get-output-string out)))])
-        (log-message benchmark-logger 'info (~a "running " opts) opts)
         extracted-run-time))
    (define out (open-output-string))
     (define delta-build-time
