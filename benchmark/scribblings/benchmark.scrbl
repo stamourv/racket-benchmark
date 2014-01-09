@@ -172,7 +172,7 @@ of list and vector, we will evaluate map and append.
 
 @section[#:tag "running macro benchmarks"]{Running Benchmarks}
 @defproc[(run-benchmarks
-          [whats (listof string?)]
+          [whats (listof any/c)]
           [hows (listof (listof any/c))]
           [run procedure?]
           [#:build build (or/c procedure? #f) #f]
@@ -180,7 +180,7 @@ of list and vector, we will evaluate map and append.
           [#:extract-time extract-time (or/c 'delta-time (-> string real?))
                           racket-time-extract-result]
           [#:num-trials num-trials exact-integer? 30]
-          [#:make-name make-name (-> string? string?) identity]
+          [#:make-name make-name (-> any/c any/c) identity]
           [#:skip skip procedure? (lambda _ #f)])
          (listof benchmark-result?)]{
 
@@ -199,9 +199,8 @@ In this case it is expected that each of the @(racket whats) report
 their time via stdout when run. When @(racket 'delta-time),
 the time of the benchmark is the time to evaluate @(racket (run args ...)).
 
-@(racket make-name) takes an element of @(racket whats) and
-is expected to produce the name for the result. This is useful
-for stripping directories or file extensions.
+@(racket make-name) takes an element of @(racket whats) and produces a
+human-readable representation of the benchmark's name.
 
 @(racket skip) has the same argument types as @(racket run), and when
 it evaluates to true the associated benchmark/options combination
