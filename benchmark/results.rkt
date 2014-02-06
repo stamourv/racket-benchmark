@@ -3,19 +3,25 @@
 (require racket/date racket/serialize "types.rkt")
 
 (provide get-past-results
-         record-results)
+         record-results
+         make-fresh-file-name) ; for incremental result recording
 
 ;; path? exact-integer? -> bench-results?
 (define (get-past-results file [version #f])
-  (deserialize (file->value (get-file file version) #:mode 'text)))
+  (map deserialize (file->list (get-file file version) #:mode 'text)))
 
 ;; bench-results? path? -> void?
 (define (record-results results file)
   (let ([fresh-name (make-fresh-file-name file)])
     ;; serialization is used as otherwise read (write date) /= date
     ;; in the equal? sense
-    (write-to-file (serialize results)
-                   fresh-name #:mode 'text #:exists 'truncate)
+    (with-output-to-file
+        fresh-name #:mode 'text #:exists 'truncate
+      ;; write each result separately, as opposed to a single big list,
+      ;; to allow incremental recording
+      (lambda ()
+        (for ([r (in-list results)])
+          (write (serialize r)))))
     (displayln (format "Wrote results to ~a" fresh-name))))
 
 ;; get latest version of file-base if version #f

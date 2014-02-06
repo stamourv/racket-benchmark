@@ -3,8 +3,8 @@
 (provide run-benchmarks
          racket-time-extract-result)
 
-(require racket/format)
-(require "types.rkt")
+(require racket/format racket/serialize)
+(require "types.rkt" "results.rkt")
 
 (define benchmark-logger (make-logger 'benchmark (current-logger)))
 
@@ -19,7 +19,9 @@
          #:num-trials [num-trials 30] ;; exact-integer?
          ;; (any/c ... -> string?)
          #:make-name [make-name (lambda (x) x)]
-         #:skip [skip (lambda (r . rest) #f)])
+         #:skip [skip (lambda (r . rest) #f)]
+         #:results-file [file-base #f])
+  (define filename (and file-base (make-fresh-file-name file-base)))
   (define (build-run-clean-1 opts)
     (define what (car opts))
     (define how (cdr opts))
@@ -48,10 +50,17 @@
             (log-message benchmark-logger 'info (~a "cleaning " opts) opts)
             (time-delta (thunk (apply clean opts))))
           0))
-    (benchmark-result
-     (make-name what)
-     how
-     run-times))
+    (define result
+      (benchmark-result
+       (make-name what)
+       how
+       run-times))
+    (when filename ; record intermediate results?
+      ;; TODO be able to print results even when a set of runs is not complete
+      (with-output-to-file
+          filename #:exists 'append
+        (lambda () (write (serialize result)) (newline))))
+    result)
   (map build-run-clean-1
        (filter (lambda (b) (not (apply skip b)))
                (cartesian-product (cons whats hows)))))

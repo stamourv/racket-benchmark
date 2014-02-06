@@ -181,7 +181,8 @@ of list and vector, we will evaluate map and append.
                           racket-time-extract-result]
           [#:num-trials num-trials exact-integer? 30]
           [#:make-name make-name (-> any/c any/c) identity]
-          [#:skip skip procedure? (lambda _ #f)])
+          [#:skip skip procedure? (lambda _ #f)]
+          [#:results-file results-file #f])
          (listof benchmark-result?)]{
 
 For each @(racket what), @(racket run) is executed for each
@@ -205,6 +206,11 @@ human-readable representation of the benchmark's name.
 @(racket skip) has the same argument types as @(racket run), and when
 it evaluates to true the associated benchmark/options combination
 is skipped.
+
+If @racket[results-file] is non-false, results will be automatically
+persisted to results-file-<n>. Incremental results are recorded after
+all runs with a given set of options are finished. For more information
+about persisting results, see @secref{Persisting Results}.
 
 Benchmarks are logically specified as an (n+1)-dimensional
 matrix where n of the dimensions are options (how to run) and one dimension is
@@ -313,7 +319,9 @@ unique combinations of options, the colors wrap around.
 
 @section[#:tag "Persisting Results"]{Persisting Results}
 Results can be persisted with @(racket record-results) and retrieved
-with @(racket get-past-results).
+with @(racket get-past-results). Results can also be automatically
+persisted by @racket[run-benchmarks] when passed a @racket[#:results-file]
+argument.
 
 @defproc[(record-results [results (listof benchmark-result?)]
                          [file path?])
