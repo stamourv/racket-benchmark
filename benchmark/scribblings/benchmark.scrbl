@@ -294,6 +294,10 @@ options in @secref["simple example"].
 for displaying on the legend of the plot.
 }
 
+@defparam[benchmark-show-legend? show-legend? any/c #:value #t]{
+Determines whether the generated plot should include a legend.
+}
+
 @subsection[#:tag "Color Schemes"]{Color Schemes}
 Color schemes are used to make benchmark plots more readable by
 coloring benchmarks according to the options (hows). In @secref["simple example"]
