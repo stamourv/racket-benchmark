@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out benchmark-result))
+(provide (struct-out benchmark-result) benchmark-logger)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Benchmark Results ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -11,3 +11,5 @@
    )
   #:prefab
   )
+
+(define benchmark-logger (make-logger 'benchmark (current-logger)))

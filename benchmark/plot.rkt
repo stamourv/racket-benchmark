@@ -86,15 +86,22 @@
     ;;    mean-quotient
     ;;    (benchmark-result-trial-times br)
     ;;    (benchmark-result-trial-times norm-br)))
+    (define name (benchmark-result-name br))
+    (define opts (benchmark-result-opts br))
     (define mean-br ; scaling down mean by mean of baseline
       (/ (mean (benchmark-result-trial-times br))
          (mean (benchmark-result-trial-times norm-br))))
     (define stddev-br ; scaling down stddev by mean of baseline
       (/ (stddev (benchmark-result-trial-times br))
          (mean (benchmark-result-trial-times norm-br))))
+    (log-message benchmark-logger 'info
+                 (~a name " " opts
+                     "; normalized mean = " (exact->inexact mean-br)
+                     "; normalized stddev = " stddev-br)
+                 #f)
     (bootstrapped-ci
-     (benchmark-result-name br)
-     (benchmark-result-opts br)
+     name
+     opts
      ;; TODO: is this the proper way to calculate mean?
      mean-br
      ;; TODO not confidence intervals anymore, see above

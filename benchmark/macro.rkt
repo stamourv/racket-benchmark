@@ -6,8 +6,6 @@
 (require racket/format racket/serialize)
 (require "types.rkt" "results.rkt")
 
-(define benchmark-logger (make-logger 'benchmark (current-logger)))
-
 (define (run-benchmarks
          whats ;; (listof string?)
          hows  ;; (listof (listof any/c))
