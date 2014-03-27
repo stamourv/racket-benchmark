@@ -14,4 +14,5 @@ In the command-line:
 In DrRacket: open **File->Package Manager...** and enter the appropriate URL from above
 into the **Package Source:** field and click **Install**.
 
-[![Build Status](https://travis-ci.org/joshmcgrath08/racket-benchmark.png?branch=master)](https://travis-ci.org/joshmcgrath08/racket-benchmark)
+[Docs](http://stamourv.github.io/racket-benchmark)
+(Updated manually. If they get up to date, let me know!)
