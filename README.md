@@ -15,4 +15,4 @@ In DrRacket: open **File->Package Manager...** and enter the appropriate URL fro
 into the **Package Source:** field and click **Install**.
 
 [Docs](http://stamourv.github.io/racket-benchmark)
-(Updated manually. If they get up to date, let me know!)
+(Updated manually. If they get out of date, let me know!)
