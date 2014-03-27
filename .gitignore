@@ -5,6 +5,7 @@ compiled/
 oc-external/
 benches/
 doc/
+scratch-doc/
 old-examples/optimization-coach/captured-frames
 old-examples/optimization-coach/moments-2000
 *.css
