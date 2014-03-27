@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket plot plot/utils racket/runtime-path racket/set "../main.rkt"))
+@(require (for-label racket plot plot/utils racket/runtime-path racket/set benchmark))
 @(require scribble/eval scribble/core)
 
 @title[#:tag "top"]{Benchmark}
