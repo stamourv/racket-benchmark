@@ -4,7 +4,8 @@
 @(require scribble/eval scribble/core)
 
 @title[#:tag "top"]{Benchmark}
-@author{@(author+email "Josh McGrath" "mcgrathj@ccs.neu.edu")}
+@author[@(author+email "Josh McGrath" "mcgrathj@ccs.neu.edu")
+        @(author+email "Vincent St-Amour" "stamourv@racket-lang.org")]
 
 @defmodule[benchmark]
 
