@@ -15,12 +15,11 @@
 
 ;; TODO document those
 (define bright-color-scheme
-  (cons '("red" "blue" "dark green" "white" "purple" "black" "yellow"
-          "dark gray")
+  (cons '("red" "blue" "dark green" "Light Gray" "purple" "DimGray" "yellow")
         '(solid)))
 (define pastel-color-scheme
-  (cons '("Salmon" "DarkBlue" "Yellow Green" "Black" "MediumOrchid" "white"
-          "Gold" "dark gray")
+  (cons '("Salmon" "DarkBlue" "Yellow Green" "DimGray" "MediumOrchid"
+          "Light Gray" "Gold")
         '(solid)))
 
 ;; TODO automatically pick between those depending on n of bars
