@@ -342,6 +342,14 @@ file-<version>. Otherwise, reads results from file-<n> where
 n is the largest natural such that file-<n+1> does not exist.
 }
 
+@section{Benchmarking on Headless Systems}
+
+@racket[(require benchmark)] brings in plotting support, which requires the
+@racket[plot] library, which in turn depends on graphical libraries on the
+host. On headless systems, which may not have such libraries, you can use
+@racket[(require benchmark/no-plot)], which does not provide plotting support.
+
+
 @;; Local Variables:
 @;; compile-command: "raco setup benchmark"
 @;; End:
