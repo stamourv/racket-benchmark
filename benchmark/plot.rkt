@@ -1,7 +1,7 @@
 #lang racket
 
 (require "types.rkt" "bootstrap-ci.rkt")
-(require plot plot/utils math/statistics)
+(require plot/no-gui plot/utils math/statistics)
 
 (provide render-benchmark-alts
          current-benchmark-color-scheme
