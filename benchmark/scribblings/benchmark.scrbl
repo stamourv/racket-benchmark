@@ -30,7 +30,7 @@ options using colors.
 
 @#reader scribble/comment-reader
 (interaction
-  (require benchmark plot racket racket/runtime-path)
+  (require benchmark plot racket racket/runtime-path compiler/find-exe)
 
   (define-runtime-path fib-path
     "examples/macro-examples/fib.rkt")
@@ -48,11 +48,11 @@ options using colors.
      ;; how to run each benchmark
      (lambda (file jit)
        (if (equal? jit 'jit)
-           (system* (find-executable-path "racket") file)
-           (system* (find-executable-path "racket") "-j" file)))
+           (system* (find-exe) file)
+           (system* (find-exe) "-j" file)))
      #:build
      (lambda (file jit)
-       (system* (find-executable-path "raco") "make" file))
+       (system* (find-exe) "-l" "raco" "make" file))
      #:clean
      (lambda (file jit)
        (system* (find-executable-path "rm") "-r" "-f" compiled-dir))
