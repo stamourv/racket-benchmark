@@ -273,7 +273,10 @@ of benchmarks using the @(racket plot) library.
           [benchmark-results (listof benchmark-result?)]
           [#:format-opts format-opts
                          (-> (listof any/c) string?)
-                         (lambda (opts) (apply ~s opts #:separator " "))])
+                         (lambda (opts) (apply ~s opts #:separator " "))]
+          [#:normalize? normalize?
+                        any/c
+                        #t])
          renderer2d?]{
 Produces a @(racket renderer2d?) of normalized time
 for the specified benchmark results with error bars
@@ -293,6 +296,8 @@ options in @secref["simple example"].
 
 @(racket format-opts) formats the list of options into strings
 for displaying on the legend of the plot.
+
+If @racket[normalize?] is @racket[#f], then the results will not be normalized.
 }
 
 @defparam[benchmark-show-legend? show-legend? any/c #:value #t]{
