@@ -50,7 +50,9 @@
          norm-opts
          brs
          #:format-opts
-         [format-opts (lambda (opts) (apply ~a opts #:separator " "))])
+         [format-opts (lambda (opts) (apply ~a opts #:separator " "))]
+         #:normalize?
+         [normalize #t])
   (define names (remove-duplicates (map benchmark-result-name brs)))
   (define opts (remove-duplicates (map benchmark-result-opts brs)))
   (define (norm-br name)
@@ -88,11 +90,15 @@
     (define name (benchmark-result-name br))
     (define opts (benchmark-result-opts br))
     (define mean-br ; scaling down mean by mean of baseline
-      (/ (mean (benchmark-result-trial-times br))
-         (mean (benchmark-result-trial-times norm-br))))
+      (if normalize
+          (/ (mean (benchmark-result-trial-times br))
+             (mean (benchmark-result-trial-times norm-br)))
+          (mean (benchmark-result-trial-times br))))
     (define stddev-br ; scaling down stddev by mean of baseline
-      (/ (stddev (benchmark-result-trial-times br))
-         (mean (benchmark-result-trial-times norm-br))))
+      (if normalize
+          (/ (stddev (benchmark-result-trial-times br))
+             (mean (benchmark-result-trial-times norm-br)))
+          (stddev (benchmark-result-trial-times br))))
     (log-message benchmark-logger 'info
                  (~a name " " opts
                      "; normalized mean = " (exact->inexact mean-br)
