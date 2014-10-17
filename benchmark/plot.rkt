@@ -91,13 +91,15 @@
     (define opts (benchmark-result-opts br))
     (define mean-br ; scaling down mean by mean of baseline
       (if normalize
-          (/ (mean (benchmark-result-trial-times br))
-             (mean (benchmark-result-trial-times norm-br)))
+          (with-handlers ([exn:fail:contract:divide-by-zero? (λ (e) 0)])
+            (/ (mean (benchmark-result-trial-times br))
+               (mean (benchmark-result-trial-times norm-br))))
           (mean (benchmark-result-trial-times br))))
     (define stddev-br ; scaling down stddev by mean of baseline
       (if normalize
-          (/ (stddev (benchmark-result-trial-times br))
-             (mean (benchmark-result-trial-times norm-br)))
+          (with-handlers ([exn:fail:contract:divide-by-zero? (λ (e) 0)])
+            (/ (stddev (benchmark-result-trial-times br))
+               (mean (benchmark-result-trial-times norm-br))))
           (stddev (benchmark-result-trial-times br))))
     (log-message benchmark-logger 'info
                  (~a name " " opts
