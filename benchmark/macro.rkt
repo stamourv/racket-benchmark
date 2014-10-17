@@ -69,7 +69,9 @@
   (foldr cp-2 (list (list)) ls))
 
 (define (racket-time-extract-result str)
-  (let* ([m (regexp-match #rx"cpu time: ([0-9]+) real time: ([0-9]+) gc time: ([0-9]+)" str)])
+  (let* ([m (regexp-match
+             #rx"cpu time: (-?[0-9]+) real time: (-?[0-9]+) gc time: (-?[0-9]+)"
+             str)])
     (if (not m)
         (error (format "Could not parse time output: ~a" str))
         (string->number (caddr m)))))
