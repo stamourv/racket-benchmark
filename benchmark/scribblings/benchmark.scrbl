@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket plot plot/utils racket/runtime-path racket/set benchmark))
+@(require (for-label racket plot/pict plot/utils racket/runtime-path racket/set benchmark))
 @(require scribble/eval scribble/core)
 
 @title[#:tag "top"]{Benchmark}
@@ -30,7 +30,7 @@ options using colors.
 
 @#reader scribble/comment-reader
 (interaction
-  (require benchmark plot racket racket/runtime-path compiler/find-exe)
+  (require benchmark plot/pict racket racket/runtime-path compiler/find-exe)
 
   (define-runtime-path fib-path
     "examples/macro-examples/fib.rkt")
@@ -115,7 +115,7 @@ of list and vector, we will evaluate map and append.
 
 @#reader scribble/comment-reader
 (interaction
-  (require benchmark plot racket/match racket/vector racket/list)
+  (require benchmark plot/pict racket/match racket/vector racket/list)
 
   ;; list/vector sizes
   (define sizes (list 50000 100000))
