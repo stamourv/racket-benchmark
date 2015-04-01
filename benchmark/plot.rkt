@@ -101,6 +101,12 @@
             (/ (stddev (benchmark-result-trial-times br))
                (mean (benchmark-result-trial-times norm-br))))
           (stddev (benchmark-result-trial-times br))))
+    ;; New attempt at confidence intervals, using a straight formula instead of
+    ;; Neil's stuff.
+    (define margin-of-error
+      (* 1.96 ; Z value for a 95% confidence interval
+         (/ stddev-br
+            (sqrt (length (benchmark-result-trial-times br))))))
     (log-message benchmark-logger 'info
                  (~a name " " opts
                      "; normalized mean = " (exact->inexact mean-br)
@@ -114,8 +120,11 @@
      ;; TODO not confidence intervals anymore, see above
      ;; (bootstrap-bca-conf mean br/norm-br bootstrapped-sample .025)
      ;; (bootstrap-bca-conf mean br/norm-br bootstrapped-sample .975)
-     (+ mean-br stddev-br)
-     (- mean-br stddev-br)))
+     ;; TODO just stddevs, not standard
+     ;; (+ mean-br stddev-br)
+     ;; (- mean-br stddev-br)
+     (+ mean-br margin-of-error)
+     (- mean-br margin-of-error)))
   (define normalized-benchmarks
     (map
      (lambda (br)
