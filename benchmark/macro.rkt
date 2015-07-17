@@ -63,11 +63,6 @@
        (filter (lambda (b) (not (apply skip b)))
                (cartesian-product (cons whats hows)))))
 
-(define (cartesian-product ls)
-  (define (cp-2 as bs)
-    (for*/list ([i (in-list as)] [j (in-list bs)]) (cons i j)))
-  (foldr cp-2 (list (list)) ls))
-
 (define (racket-time-extract-result str)
   (let* ([m (regexp-match
              #rx"cpu time: (-?[0-9]+) real time: (-?[0-9]+) gc time: (-?[0-9]+)"
