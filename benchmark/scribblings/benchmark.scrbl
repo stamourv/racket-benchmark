@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label racket plot/pict plot/utils racket/runtime-path racket/set benchmark))
+@(require (for-label racket plot racket/runtime-path racket/set benchmark))
 @(require scribble/eval scribble/core racket/runtime-path)
 
 @(define-runtime-path eval-log "log.rktd")
