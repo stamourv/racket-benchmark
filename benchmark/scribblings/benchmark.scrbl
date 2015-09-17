@@ -1,7 +1,10 @@
 #lang scribble/manual
 
 @(require (for-label racket plot/pict plot/utils racket/runtime-path racket/set benchmark))
-@(require scribble/eval scribble/core)
+@(require scribble/eval scribble/core racket/runtime-path)
+
+@(define-runtime-path eval-log "log.rktd")
+@(define the-eval (make-log-based-eval eval-log 'replay))
 
 @title[#:tag "top"]{Benchmark}
 @author[@(author+email "Josh McGrath" "mcgrathj@ccs.neu.edu")
@@ -29,7 +32,7 @@ same program under different options, distinguishing the different
 options using colors.
 
 @#reader scribble/comment-reader
-(interaction
+(interaction #:eval the-eval
   (require benchmark plot/pict racket racket/runtime-path compiler/find-exe)
 
   (define-runtime-path fib-path
@@ -114,7 +117,7 @@ will corespond to our hows. That is, for each input size, for each
 of list and vector, we will evaluate map and append.
 
 @#reader scribble/comment-reader
-(interaction
+(interaction #:eval the-eval
   (require benchmark plot/pict racket/match racket/vector racket/list)
 
   ;; list/vector sizes
