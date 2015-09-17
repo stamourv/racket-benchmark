@@ -61,7 +61,7 @@
     result)
   (map build-run-clean-1
        (filter (lambda (b) (not (apply skip b)))
-               (cartesian-product (cons whats hows)))))
+               (apply cartesian-product (cons whats hows)))))
 
 (define (racket-time-extract-result str)
   (let* ([m (regexp-match
