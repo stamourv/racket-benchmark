@@ -199,10 +199,13 @@ runs of @(racket run).
 
 When not @(racket 'delta-time), @(racket extract-time) is
 applied to the contents of stdout after each run of @(racket run),
-and must produce a @(racket benchmark-trial-time?).
+and must produce a @racket[float?] that is the run time of the test.
 In this case it is expected that each of the @(racket whats) report
-their time via stdout when run. When @(racket 'delta-time),
-the time of the benchmark is the time to evaluate @(racket (run args ...)).
+their time via stdout when run.
+When @(racket 'delta-time), the time of the benchmark is the time to evaluate
+@(racket (run args ...)).
+In this case case each of the @racket[whats] do not need to report there own
+time to stdout.
 
 @(racket make-name) takes an element of @(racket whats) and produces a
 human-readable representation of the benchmark's name.
