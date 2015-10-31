@@ -1,9 +1,11 @@
 #lang scribble/manual
 
 @(require (for-label racket plot racket/runtime-path racket/set benchmark))
-@(require scribble/eval scribble/core racket/runtime-path)
+@(require scribble/eval scribble/core racket/runtime-path plot/no-gui benchmark)
 
 @(define-runtime-path eval-log "log.rktd")
+@(define-runtime-path jit-results "../examples/docs-jit-results")
+@(define-runtime-path list-vector-results "../examples/docs-list-vector-results")
 @(define the-eval (make-log-based-eval eval-log 'replay))
 
 @title[#:tag "top"]{Benchmark}
@@ -31,41 +33,51 @@ the results. The plot renderer groups together the results of running the
 same program under different options, distinguishing the different
 options using colors.
 
-@#reader scribble/comment-reader
-(interaction #:eval the-eval
-  (require benchmark plot/pict racket racket/runtime-path compiler/find-exe)
-
-  (define-runtime-path fib-path
-    "examples/macro-examples/fib.rkt")
-  (define-runtime-path collatz-path
-    "examples/macro-examples/collatz.rkt")
-  (define-runtime-path compiled-dir
-    "examples/macro-examples/compiled")
-
-  (define results
-    (run-benchmarks
-     ;; files to run (whats)
-     (list fib-path collatz-path)
-     ;; list of options (hows)
-     (list (list 'jit 'no-jit))
-     ;; how to run each benchmark
-     (lambda (file jit)
-       (if (equal? jit 'jit)
-           (system* (find-exe) file)
-           (system* (find-exe) "-j" file)))
-     #:build
-     (lambda (file jit)
-       (system* (find-exe) "-l" "raco" "make" file))
-     #:clean
-     (lambda (file jit)
-       (system* (find-executable-path "rm") "-r" "-f" compiled-dir))
-     #:num-trials 30
-     #:make-name (lambda (path)
-                   (let-values
-                       ([(_1 file-name _2) (split-path path)])
-                     (path->string file-name)))))
-
-  (parameterize ([plot-x-ticks no-ticks])
+@nested[#:style 'code-inset]{
+@racketinput0[(require benchmark plot/pict racket racket/runtime-path compiler/find-exe)]
+@racketinput0[(define-runtime-path fib-path
+                "examples/macro-examples/fib.rkt")
+]
+@racketinput0[(define-runtime-path collatz-path
+                "examples/macro-examples/collatz.rkt")
+]
+@racketinput0[(define-runtime-path compiled-dir
+                "examples/macro-examples/compiled")
+]
+@racketinput0[
+(define results
+  (run-benchmarks
+   (code:comment "files to run (whats)")
+   (list fib-path collatz-path)
+   (code:comment "list of options (hows)")
+   (list (list 'jit 'no-jit))
+   (code:comment "how to run each benchmark")
+   (lambda (file jit)
+     (if (equal? jit 'jit)
+         (system* (find-exe) file)
+         (system* (find-exe) "-j" file)))
+   #:build
+   (lambda (file jit)
+     (system* (find-exe) "-l" "raco" "make" file))
+   #:clean
+   (lambda (file jit)
+     (system* (find-executable-path "rm") "-r" "-f" compiled-dir))
+   #:num-trials 30
+   #:make-name (lambda (path)
+                 (let-values
+                     ([(_1 file-name _2) (split-path path)])
+                   (path->string file-name)))))]
+@racketinput0[
+(parameterize ([plot-x-ticks no-ticks])
+   (plot-pict
+    #:title "jit vs no jit"
+    #:x-label #f
+    #:y-label "normalized time"
+    (render-benchmark-alts
+     ;; default options
+     (list 'jit)
+     results)))
+#,(parameterize ([plot-x-ticks no-ticks])
     (plot-pict
      #:title "jit vs no jit"
      #:x-label #f
@@ -73,8 +85,9 @@ options using colors.
      (render-benchmark-alts
       ;; default options
       (list 'jit)
-      results)))
-  )
+      (get-past-results jit-results))))
+]
+}
 
 @racketmod[#:file "fib.rkt"
   racket
@@ -116,63 +129,80 @@ list/vector size and whether we are doing list or vector operations
 will corespond to our hows. That is, for each input size, for each
 of list and vector, we will evaluate map and append.
 
-@#reader scribble/comment-reader
-(interaction #:eval the-eval
-  (require benchmark plot/pict racket/match racket/vector racket/list)
+@nested[#:style 'code-inset]{
+@racketinput0[(require benchmark plot/pict racket/match racket/vector racket/list)]
 
-  ;; list/vector sizes
-  (define sizes (list 50000 100000))
+@racketinput0[(define sizes (list 50000 100000)) (code:comment "list/vector sizes")
+]
 
-  (define lists (map (lambda (i) (range i)) sizes))
+@racketinput0[(define lists (map (lambda (i) (range i)) sizes))
+]
 
-  (define vectors (map list->vector lists))
+@racketinput0[(define vectors (map list->vector lists))
+]
 
-  (define results
-    (run-benchmarks
-     ;; operations (whats)
-     (list 'square-map 'self-append)
-     ;; list of options (hows)
-     (list
-      ;; sizes (and their indices) in the sizes list
-      (map cons (range (length sizes)) sizes)
-      ;; implementations of operations
-      (list 'vector 'list))
-     ;; to run each benchmark
-     (lambda (op index/size impl)
-       (let ([fn
-              (match (cons op impl)
-                [(cons 'square-map 'vector)
-                 (lambda (i) (vector-map (lambda (x) (* x x)) i))]
-                [(cons 'square-map 'list)
-                 (lambda (i) (map (lambda (x) (* x x)) i))]
-                [(cons 'self-append 'vector)
-                 (lambda (i) (vector-append i i))]
-                [(cons 'self-append 'list)
-                 (lambda (i) (append i i))])]
-             [input (list-ref (match impl
-                                ['vector vectors]
-                                ['list lists])
-                              (car index/size))])
-         (fn input)))
-     ;; don't extract time, instead time (run ...)
-     #:extract-time 'delta-time
-     #:num-trials 30))
-
-  (parameterize ([plot-x-ticks no-ticks])
-    (plot-pict
-     #:title "vectors vs lists"
-     #:x-label #f
-     #:y-label "normalized time"
-     (render-benchmark-alts
-      ;; default options
-      (list (cons 0 50000) 'list)
-      results
-      ;; format options so we can omit the index in the size list
-      #:format-opts (lambda (opts)
-                      (let ([index/size (car opts)]
-                            [impl (cadr opts)])
-                        (format "size: ~a, ~a" (cdr index/size) impl))))))
-  )
+@racketinput0[
+(define results
+  (run-benchmarks
+   (code:comment "operations (whats)")
+   (list 'square-map 'self-append)
+   (code:comment "list of options (hows)")
+   (list
+    (code:comment "sizes (and their indices) in the sizes list")
+    (map cons (range (length sizes)) sizes)
+    (code:comment "implementations of operations")
+    (list 'vector 'list))
+   (code:comment "to run each benchmark")
+   (lambda (op index/size impl)
+     (let ([fn
+            (match (cons op impl)
+              [(cons 'square-map 'vector)
+               (lambda (i) (vector-map (lambda (x) (* x x)) i))]
+              [(cons 'square-map 'list)
+               (lambda (i) (map (lambda (x) (* x x)) i))]
+              [(cons 'self-append 'vector)
+               (lambda (i) (vector-append i i))]
+              [(cons 'self-append 'list)
+               (lambda (i) (append i i))])]
+           [input (list-ref (match impl
+                              ['vector vectors]
+                              ['list lists])
+                            (car index/size))])
+       (fn input)))
+   (code:comment "don't extract time, instead time (run ...)")
+   #:extract-time 'delta-time
+   #:num-trials 30))]
+@racketinput0[
+(parameterize ([plot-x-ticks no-ticks])
+  (plot-pict
+   #:title "vectors vs lists"
+   #:x-label #f
+   #:y-label "normalized time"
+   (render-benchmark-alts
+    ;; default options
+    (list (cons 0 50000) 'list)
+    results
+    ;; format options so we can omit the index in the size list
+    #:format-opts (lambda (opts)
+                    (let ([index/size (car opts)]
+                          [impl (cadr opts)])
+                       (format "size: ~a, ~a" (cdr index/size) impl))))))
+#,(parameterize ([plot-x-ticks no-ticks])
+  (plot-pict
+   #:title "vectors vs lists"
+   #:x-label #f
+   #:y-label "normalized time"
+   (render-benchmark-alts
+    ;; default options
+    (list (cons 0 50000) 'list)
+    (get-past-results list-vector-results)
+    ;; format options so we can omit the index in the size list
+    #:format-opts (lambda (opts)
+                    (let ([index/size (car opts)]
+                          [impl (cadr opts)])
+                      (format "size: ~a, ~a" (cdr index/size) impl))))))
+]
+}
 
 @section[#:tag "running macro benchmarks"]{Running Benchmarks}
 @defproc[(run-benchmarks
