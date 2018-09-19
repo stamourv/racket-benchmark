@@ -1,16 +1,21 @@
 language: c
 
 env:
- - RACKET_VERSION=6.0
- - RACKET_VERSION=6.0.1
- - RACKET_VERSION=6.1
- - RACKET_VERSION=HEAD
+  global:
+    - RACKET_DIR=~/racket
+  matrix:
+    - RACKET_VERSION=6.0
+    - RACKET_VERSION=6.0.1
+    - RACKET_VERSION=6.1
+    - RACKET_VERSION=6.12
+    - RACKET_VERSION=7.0
+    - RACKET_VERSION=HEAD
 
 before_install:
  - git clone https://github.com/greghendershott/travis-racket.git
  - cat travis-racket/install-racket.sh | bash # pipe to bash not sh!
+ - export PATH=${RACKET_DIR}/bin:${PATH}
 
 script:
- - export PATH=/usr/racket/bin:$PATH
  - make link_install
  - make tests
