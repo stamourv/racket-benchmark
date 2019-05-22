@@ -258,6 +258,17 @@ Racket's @(racket time). Note: this is the default for the
 @(racket #:extract-time) argument of @(racket run-benchmarks).
 }
 
+@subsection[#:tag "Benchmark data"]{Benchmark Data}
+
+@defproc[(benchmark-data [benchmark benchmark-result?])
+         (listof string? (listof any/c) (listof number?))]{
+
+Return the raw data from the benchmark-result @(racket benchmark). You
+can use this to design your own data visualizations.
+
+}
+
+
 @subsection{Progress Logging}
 
 To track progress of a benchmarking run, @racket[run-benchmarks] logs actions
