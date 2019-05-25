@@ -270,6 +270,22 @@ The easiest way to see this logging is to run your benchmark harness with:
 For more information about logging, see
 @secref[#:doc '(lib "scribblings/reference/reference.scrbl")]{logging}.
 
+@section[#:tag "Benchmark results"]{Benchmark results}
+
+@defstruct*[benchmark-result ([name string?] [opts (listof any/c)] [trial-times (listof number?)])]{
+
+A structure type for benchmark results returned by
+@racket[run-benchmarks]. @racket[name] corresponds to the element of
+@racket[whats] being run, while @racket[opts] corresponds to the
+element of @racket[hows] being run (see @racket[run-benchmarks]). Each
+element of @racket[trial-times] is the time taken to run the the
+benchmark in the corresponding trial; this list will have as many
+elements as the @racket[#:num-trials] argument supplied to
+@racket[run-benchmarks] determines.
+
+}
+
+
 @section[#:tag "Plotting"]{Plotting}
 @(racket benchmark) exports a @(racket renderer2d?) for plotting results
 of benchmarks using the @(racket plot) library.

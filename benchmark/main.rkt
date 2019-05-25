@@ -10,4 +10,5 @@
          (all-from-out "plot.rkt")
          get-past-results
          record-results
+         (struct-out benchmark-result)
          racket-time-extract-result)
