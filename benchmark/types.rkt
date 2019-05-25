@@ -5,9 +5,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;; Benchmark Results ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (struct benchmark-result
-  (name            ;; string?
+  (name            ;; any/c
    opts            ;; (listof any/c)
-   trial-times     ;; (listof num?)
+   trial-times     ;; (listof number?)
    )
   #:prefab
   )
